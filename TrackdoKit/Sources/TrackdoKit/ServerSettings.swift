@@ -9,11 +9,16 @@ public struct ServerSettings: Sendable, Equatable {
     public let token: String
 
     public init(url: ServerURL, token: String) throws(ServerSettingsError) {
+        self.url = url
+        self.token = try Self.normalized(token: token)
+    }
+
+    /// `token` without surrounding whitespace, if it is a valid token.
+    public static func normalized(token: String) throws(ServerSettingsError) -> String {
         let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !trimmed.contains(where: \.isWhitespace) else {
             throw .invalidToken
         }
-        self.url = url
-        self.token = trimmed
+        return trimmed
     }
 }

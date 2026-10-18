@@ -1,0 +1,41 @@
+# Generates Trackdo.xcodeproj: `xcodegen generate --spec App/project.yml`.
+name: Trackdo
+options:
+  bundleIdPrefix: dev.syufu
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+packages:
+  TrackdoKit:
+    path: ../TrackdoKit
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: true
+    TARGETED_DEVICE_FAMILY: "1"
+    # TrackdoFFIC has no Intel simulator slice.
+    ARCHS: arm64
+targets:
+  Trackdo:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    dependencies:
+      - package: TrackdoKit
+    info:
+      path: Info.plist
+      properties:
+        CFBundleDisplayName: trackdo
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # Plain http is accepted for development servers on the local
+        # network only; ServerURL refuses it for other hosts.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        NSLocalNetworkUsageDescription: trackdo syncs with the server you set up on your local network.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.syufu.trackdo
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"

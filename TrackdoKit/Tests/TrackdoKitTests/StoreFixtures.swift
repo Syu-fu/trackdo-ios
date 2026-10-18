@@ -79,13 +79,17 @@ func opsOf(_ core: TrackdoCore) -> [Data] {
     return batch.map { try! JSONSerialization.data(withJSONObject: $0) }
 }
 
+let healthy = status(200, #"{"status":"ok","protocol_version":3}"#)
+
 func routes(
+    health: @escaping StubServer.Handler = healthy,
     ops: @escaping StubServer.Handler = accepted,
     snapshot: @escaping StubServer.Handler = emptySnapshot,
     events: @escaping StubServer.Handler = status(200)
 ) -> StubServer.Handler {
     { request in
         switch request.path.split(separator: "/").last {
+        case "healthz": try health(request)
         case "ops": try ops(request)
         case "snapshot": try snapshot(request)
         case "events": try events(request)
