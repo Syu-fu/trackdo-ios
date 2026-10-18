@@ -1,0 +1,5 @@
+[toolchain]
+channel = "1.88.0"
+components = ["rustfmt", "clippy", "llvm-tools-preview"]
+# aarch64-apple-darwin runs `swift test` on macOS hosts.
+targets = ["aarch64-apple-ios", "aarch64-apple-ios-sim", "aarch64-apple-darwin"]

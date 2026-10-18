@@ -1,0 +1,15 @@
+[package]
+name = "uniffi-bindgen"
+description = "Generates Swift bindings for trackdo-ffi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+uniffi = { workspace = true, features = ["cli"] }
+
+[lints]
+workspace = true

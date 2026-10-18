@@ -1,0 +1,21 @@
+[package]
+name = "trackdo-ffi"
+description = "UniFFI bindings of trackdo-core for the iOS client"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lib]
+# lib: Rust tests, staticlib: iOS, cdylib: binding generation on the host.
+crate-type = ["lib", "staticlib", "cdylib"]
+
+[dependencies]
+trackdo-core.workspace = true
+trackdo-protocol.workspace = true
+uniffi.workspace = true
+
+[lints]
+workspace = true
