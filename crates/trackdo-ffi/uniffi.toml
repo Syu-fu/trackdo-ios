@@ -1,0 +1,6 @@
+[bindings.swift]
+# Swift target holding the generated bindings, and the C module beneath it
+# that TrackdoFFIC.xcframework provides.
+module_name = "TrackdoFFI"
+ffi_module_name = "TrackdoFFIC"
+ffi_module_filename = "TrackdoFFIC"

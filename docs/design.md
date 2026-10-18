@@ -58,8 +58,9 @@ reads owned value types published by a `@MainActor` `@Observable` model.
 - Bindings are generated in library mode from the host `cdylib`.
 - `scripts/build-xcframework.sh` builds `aarch64-apple-ios`,
   `aarch64-apple-ios-sim` and `aarch64-apple-darwin` (for `swift test`) into
-  `TrackdoFFI.xcframework`, consumed by `TrackdoKit` as a `binaryTarget`.
-  Intel simulators are not supported.
+  `TrackdoFFIC.xcframework`, the C module consumed by `TrackdoKit` as a
+  `binaryTarget`. The generated Swift forms the `TrackdoFFI` target on top of
+  it (`crates/trackdo-ffi/uniffi.toml`). Intel simulators are not supported.
 - Generated files are not committed.
 - UniFFI 0.32's bindings generator needs Rust 1.88 (through askama), so this
   repository pins 1.88.0 while trackdo-core pins 1.87.0.

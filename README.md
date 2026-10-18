@@ -16,6 +16,7 @@ Domain logic and the wire format come from
 |---|---|
 | [`crates/trackdo-ffi`](crates/trackdo-ffi) | UniFFI bindings of trackdo-core, including a sans-IO sync driver. |
 | [`crates/uniffi-bindgen`](crates/uniffi-bindgen) | Generates the Swift bindings for `trackdo-ffi`. |
+| [`TrackdoKit`](TrackdoKit) | Swift package: the bindings (`TrackdoFFI`) over the Rust library (`TrackdoFFIC.xcframework`). |
 
 ## Development
 
@@ -27,7 +28,13 @@ targets.
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --check
+
+scripts/build-xcframework.sh   # Rust library and Swift bindings for TrackdoKit
+(cd TrackdoKit && swift test)
 ```
+
+Run the script again after changing `crates/trackdo-ffi`; its outputs are not
+committed.
 
 ## License
 
