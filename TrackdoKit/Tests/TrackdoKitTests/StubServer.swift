@@ -37,6 +37,14 @@ final class StubServer: @unchecked Sendable {
         respond { _ in (status, Data(json.utf8)) }
     }
 
+    /// Answers the n-th request with the n-th handler, repeating the last.
+    func respond(inOrder handlers: [Handler]) {
+        let next = Counter()
+        respond { request in
+            try handlers[min(next.increment(), handlers.count - 1)](request)
+        }
+    }
+
     var requests: [Recorded] { lock.withLock { recorded } }
 
     fileprivate func handle(_ request: Recorded) throws -> (status: Int, body: Data) {
@@ -45,6 +53,19 @@ final class StubServer: @unchecked Sendable {
             return self.handler
         }
         return try handler(request)
+    }
+}
+
+final class Counter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = 0
+
+    /// The value before incrementing.
+    func increment() -> Int {
+        lock.withLock {
+            defer { value += 1 }
+            return value
+        }
     }
 }
 
