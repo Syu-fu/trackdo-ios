@@ -5,6 +5,7 @@ mod env;
 mod error;
 mod ids;
 mod views;
+mod wire;
 
 use std::sync::{Arc, Mutex, MutexGuard};
 
@@ -14,6 +15,7 @@ use uuid::Uuid;
 use crate::core::Core;
 use crate::env::{SystemClock, UuidV7};
 
+pub use crate::core::PushOutcome;
 pub use error::FfiError;
 pub use views::{EntryRecord, TaskRecord};
 
@@ -109,6 +111,16 @@ impl TrackdoCore {
     pub fn entries_for(&self, task_id: String) -> Result<Vec<EntryRecord>, FfiError> {
         self.lock().entries_for(&task_id)
     }
+
+    /// Body of the next `POST /ops`, or `None` when nothing is pending.
+    pub fn next_push_batch(&self) -> Option<Vec<u8>> {
+        self.lock().next_push_batch()
+    }
+
+    /// Applies a `POST /ops` response; persist the state afterwards.
+    pub fn handle_push_response(&self, status: u16, body: Vec<u8>) -> PushOutcome {
+        self.lock().handle_push_response(status, &body)
+    }
 }
 
 impl TrackdoCore {
@@ -175,5 +187,20 @@ mod tests {
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].id, past);
         assert!(core.tasks().is_empty());
+    }
+
+    #[test]
+    fn acknowledged_batch_is_not_sent_again() {
+        let core = TrackdoCore::new();
+        core.create("a".to_owned()).unwrap();
+        let batch = core.next_push_batch().unwrap();
+        let sent: Vec<serde_json::Value> = serde_json::from_slice(&batch).unwrap();
+        let accepted: Vec<_> = sent.iter().map(|op| op["op_id"].clone()).collect();
+        let response = serde_json::json!({ "accepted": accepted });
+
+        let outcome = core.handle_push_response(200, serde_json::to_vec(&response).unwrap());
+
+        assert_eq!(outcome, PushOutcome::Accepted);
+        assert_eq!(core.next_push_batch(), None);
     }
 }

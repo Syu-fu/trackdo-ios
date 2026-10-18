@@ -1,6 +1,10 @@
 //! Commands and queries on the replica, in FFI terms: string ids, Unix
 //! milliseconds and owned records.
 
+mod push;
+
+pub use push::PushOutcome;
+
 use trackdo_core::env::{Clock, IdGen};
 use trackdo_core::hlc::DeviceId;
 use trackdo_core::replica::Replica;
@@ -13,7 +17,7 @@ use crate::views::{EntryRecord, TaskRecord};
 
 /// A replica plus the clock that dates its queries.
 pub(crate) struct Core<C, G> {
-    replica: Replica<C, G>,
+    pub(super) replica: Replica<C, G>,
     clock: C,
 }
 
@@ -136,7 +140,7 @@ fn entry(id: &str) -> Result<TimeEntryId, FfiError> {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -146,7 +150,7 @@ mod tests {
     const NOW: u64 = 1_730_000_000_000;
 
     #[derive(Clone)]
-    struct TestClock(Arc<AtomicU64>);
+    pub(crate) struct TestClock(Arc<AtomicU64>);
 
     impl TestClock {
         fn advance(&self, millis: u64) {
@@ -160,7 +164,7 @@ mod tests {
         }
     }
 
-    fn core() -> (Core<TestClock, UuidV7>, TestClock) {
+    pub(crate) fn core() -> (Core<TestClock, UuidV7>, TestClock) {
         let clock = TestClock(Arc::new(AtomicU64::new(NOW)));
         (Core::new(DeviceId(1), clock.clone(), UuidV7), clock)
     }
