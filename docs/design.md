@@ -147,7 +147,7 @@ reads owned value types published by a `@MainActor` `@Observable` model.
 - Integration tests run `TrackdoKit` against a real trackdo-server v0.2.0
   (`scripts/integration-test.sh`). `scripts/test-server.sh` builds the server
   with `cargo install` and runs it on 127.0.0.1, both locally and in CI:
-  macOS runners have no Docker, and the published image is amd64 only. It can
+  macOS runners have no Docker, so the published image cannot be used. It can
   restart the server on the same database, which gives the log a new id.
   The tests are skipped unless `TRACKDO_TEST_SERVER_URL` is set. CI caches
   the server binary.

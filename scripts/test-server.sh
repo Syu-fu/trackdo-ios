@@ -5,8 +5,8 @@
 #   scripts/test-server.sh restart  # same database, new log id
 #   scripts/test-server.sh stop
 #
-# The server is built from its release tag with `cargo install`, since its
-# container image is amd64 only.
+# The server is built from its release tag with `cargo install`, since the
+# macOS runners CI uses have no Docker to run its container image.
 set -euo pipefail
 
 version=v0.2.0
