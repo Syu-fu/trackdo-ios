@@ -15,5 +15,7 @@ let package = Package(
         .target(name: "TrackdoKit", dependencies: ["TrackdoFFI"]),
         .testTarget(name: "TrackdoFFITests", dependencies: ["TrackdoFFI"]),
         .testTarget(name: "TrackdoKitTests", dependencies: ["TrackdoKit"]),
+        // Against a real trackdo-server; see scripts/integration-test.sh.
+        .testTarget(name: "TrackdoKitIntegrationTests", dependencies: ["TrackdoKit", "TrackdoFFI"]),
     ]
 )

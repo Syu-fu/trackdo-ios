@@ -122,10 +122,12 @@ reads owned value types published by a `@MainActor` `@Observable` model.
 - Swift (macOS runner): Swift Testing unit tests for `TrackdoKit`, with at
   least 80% line coverage of its hand-written sources. The generated bindings
   and the app's views are not counted.
-- Integration tests run `TrackdoKit` against a real trackdo-server v0.2.0.
-  CI builds the server with `cargo install`, since macOS runners have no
-  Docker; locally it runs from the `ghcr.io/syu-fu/trackdo-server:0.2` image.
-  They are skipped unless `TRACKDO_TEST_SERVER_URL` is set.
+- Integration tests run `TrackdoKit` against a real trackdo-server v0.2.0
+  (`scripts/integration-test.sh`). `scripts/test-server.sh` builds the server
+  with `cargo install` and runs it on 127.0.0.1, both locally and in CI:
+  macOS runners have no Docker, and the published image is amd64 only. It can
+  restart the server on the same database, which gives the log a new id.
+  The tests are skipped unless `TRACKDO_TEST_SERVER_URL` is set.
 - The app is only built for the simulator, without UI tests.
 - Workflows pin actions by SHA and are checked with `actionlint` and
   `pinact run --check`.

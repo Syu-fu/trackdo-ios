@@ -31,6 +31,7 @@ cargo fmt --check
 
 scripts/build-xcframework.sh   # Rust library and Swift bindings for TrackdoKit
 (cd TrackdoKit && swift test)
+scripts/integration-test.sh    # TrackdoKit against a local trackdo-server
 ```
 
 Run the script again after changing `crates/trackdo-ffi`; its outputs are not
