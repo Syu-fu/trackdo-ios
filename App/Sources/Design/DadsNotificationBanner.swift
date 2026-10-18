@@ -1,9 +1,10 @@
 import SwiftUI
 
 /// DADS notification banner (components/notification-banner), standard
-/// style at mobile size: icon and title, then an optional description. It
-/// has no link, so it is not interactive.
-struct DadsNotificationBanner: View {
+/// style at mobile size: icon and title, then optional details such as the
+/// description and action buttons, which align to the trailing edge. It is
+/// placed in the flow of the screen, so it has no close button.
+struct DadsNotificationBanner<Details: View>: View {
     enum Kind {
         case success
         case error
@@ -41,7 +42,7 @@ struct DadsNotificationBanner: View {
 
     let kind: Kind
     let title: LocalizedStringResource
-    var description: LocalizedStringResource?
+    @ViewBuilder let details: () -> Details
 
     @ScaledMetric(relativeTo: .headline) private var iconSize: CGFloat = 28
 
@@ -62,12 +63,8 @@ struct DadsNotificationBanner: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityAddTraits(.isHeader)
             }
-            if let description {
-                Text(plain: description)
-                    .dadsFont(.std16N170)
-                    .foregroundStyle(DadsColor.gray800)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            .accessibilityElement(children: .combine)
+            details()
         }
         .padding(.top, 8)
         .padding(.horizontal, 16)
@@ -76,6 +73,34 @@ struct DadsNotificationBanner: View {
         .overlay {
             RoundedRectangle(cornerRadius: 12).strokeBorder(kind.color, lineWidth: 3)
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
+    }
+}
+
+/// The banner description's text style.
+struct DadsBannerDescription: View {
+    let text: Text
+
+    init(_ resource: LocalizedStringResource) {
+        text = Text(plain: resource)
+    }
+
+    init(verbatim: String) {
+        text = Text(verbatim: verbatim)
+    }
+
+    var body: some View {
+        text
+            .dadsFont(.std16N170)
+            .foregroundStyle(DadsColor.gray800)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+extension DadsNotificationBanner where Details == DadsBannerDescription? {
+    init(kind: Kind, title: LocalizedStringResource, description: LocalizedStringResource? = nil) {
+        self.init(kind: kind, title: title) {
+            description.map { DadsBannerDescription($0) }
+        }
     }
 }

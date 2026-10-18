@@ -29,6 +29,9 @@ targets:
         CFBundleDisplayName: trackdo
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # DADS defines only a light palette; keep system bars and sheets
+        # light too until a dark one exists.
+        UIUserInterfaceStyle: Light
         # Plain http is accepted for development servers on the local
         # network only; ServerURL refuses it for other hosts.
         NSAppTransportSecurity:

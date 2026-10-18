@@ -1,8 +1,8 @@
 import SwiftUI
 import TrackdoKit
 
-/// The sync server's URL and token. Settings are saved only after the
-/// server accepted them; the banner at the top reports the outcome.
+/// The optional sync server's URL and token. Settings are saved only after
+/// the server accepted them; the banner at the top reports the outcome.
 struct SettingsView: View {
     @Bindable var editor: SettingsEditor
     @FocusState private var focus: Field?
@@ -23,7 +23,7 @@ struct SettingsView: View {
                         .dadsFont(.std24B150)
                         .foregroundStyle(DadsColor.gray900)
                         .accessibilityAddTraits(.isHeader)
-                    Text("Your edits sync between devices through your trackdo-server. Without one, they stay on this device.")
+                    Text("Optional. trackdo works on this device without a server. To use your tasks on other devices too, connect them all to your trackdo-server.")
                         .dadsFont(.std16N170)
                         .foregroundStyle(DadsColor.gray800)
                 }
@@ -36,7 +36,7 @@ struct SettingsView: View {
             .padding(.vertical, 24)
         }
         .background(DadsColor.white)
-        .navigationTitle("Settings")
+        .navigationTitle("Sync")
         .onChange(of: editor.url) { savedURL = nil }
         .onChange(of: editor.token) { savedURL = nil }
         .onChange(of: editor.issue) { _, issue in
@@ -107,7 +107,7 @@ struct SettingsView: View {
                             .accessibilityHidden(true)
                         Text("Checking the server…")
                     } else {
-                        Text("Check and save")
+                        Text("Check and Save")
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -118,11 +118,11 @@ struct SettingsView: View {
                 Button {
                     isConfirmingRemoval = true
                 } label: {
-                    Text("Remove token").frame(maxWidth: .infinity)
+                    Text("Remove Token").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.dads(.outline))
                 .confirmationDialog("Remove the token?", isPresented: $isConfirmingRemoval, titleVisibility: .visible) {
-                    Button("Remove token", role: .destructive) {
+                    Button("Remove Token", role: .destructive) {
                         Task { await editor.removeToken() }
                     }
                 } message: {

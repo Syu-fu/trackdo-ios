@@ -11,7 +11,7 @@ struct TrackdoApp: App {
             switch model {
             case let .success(model):
                 NavigationStack {
-                    SettingsView(editor: model.settings)
+                    TaskListView(model: model.tasks, settings: model.settings)
                 }
                 .task { await model.start() }
             case let .failure(error):

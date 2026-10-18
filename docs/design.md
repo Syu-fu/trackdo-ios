@@ -104,17 +104,25 @@ reads owned value types published by a `@MainActor` `@Observable` model.
 ## UI
 
 - SwiftUI with Observation, `NavigationStack`. Requires iOS 26.
-- Built following the Digital Agency design system (DADS). `App/Sources/Design`
-  holds its tokens (from `@digital-go-jp/design-tokens` 2.0.1) and the
-  components the screens use: buttons, input text, notification banners and
-  the focus indicator. The system font stands in for Noto Sans JP, and text
-  sizes follow Dynamic Type. Only the light palette is defined.
-- Screen logic that can be tested, such as `SettingsEditor`, lives in
-  `TrackdoKit`; views only lay it out.
+- The app works on its own: it opens on the task list, and every edit is
+  saved on the device. Sync is an optional setting reached from the list's
+  toolbar.
+- The look follows the Digital Agency design system (DADS), and structure
+  and interaction follow Apple's Human Interface Guidelines: navigation bar
+  with a large title, toolbar actions, list swipe actions with the same
+  actions in a menu, sheets and confirmation dialogs.
+  `App/Sources/Design` holds the DADS tokens (from
+  `@digital-go-jp/design-tokens` 2.0.1) and the components the screens use:
+  buttons, input text, notification banners and the focus indicator. The
+  system font stands in for Noto Sans JP, and text sizes follow Dynamic Type.
+  DADS defines only a light palette, so the app sets `UIUserInterfaceStyle`
+  to `Light` for now.
+- Screen logic that can be tested, such as `TaskListModel` and
+  `SettingsEditor`, lives in `TrackdoKit`; views only lay it out.
 - The MVP has three screens:
   - Task list: add, complete or reopen, rename, delete. Each row starts or
-    stops a timer and shows the task's total. A banner shows the running
-    timer.
+    stops a timer and shows the task's total, counting up live. A banner
+    above the list shows the running timer with a Stop button.
   - Task detail: the task's entries, with editing, deleting and adding past
     entries. Entries that need attention or were stopped by healing are
     marked.
