@@ -3,13 +3,15 @@ import TrackdoKit
 
 /// What a row asks the list to do.
 enum TaskRowAction {
+    case open
     case rename
     case toggleDone
     case delete
 }
 
 /// One task in the DADS resource list style (components/resource-list):
-/// title and total time, the timer button and a More menu. The menu offers
+/// title and total time, the timer button and a More menu. The row holds
+/// buttons, so only the title opens the task, as DADS asks. The menu offers
 /// the same actions as the swipe actions, for people who cannot swipe.
 struct TaskRow: View {
     let model: TaskListModel
@@ -36,10 +38,24 @@ struct TaskRow: View {
 
     private var contents: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(verbatim: item.displayTitle)
+            Button {
+                onAction(.open)
+            } label: {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(verbatim: item.displayTitle)
+                        .strikethrough(item.isDone)
+                        .multilineTextAlignment(.leading)
+                    Image(systemName: "chevron.forward")
+                        .imageScale(.small)
+                        .accessibilityHidden(true)
+                }
                 .dadsFont(.std17B170)
-                .strikethrough(item.isDone)
                 .foregroundStyle(item.isDone ? DadsColor.gray600 : DadsColor.gray900)
+                .frame(minHeight: 44)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(Text("Shows its time entries."))
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 let ms = model.totalMs(of: item, at: context.date)
                 Text(verbatim: ElapsedTime.clock(ms))

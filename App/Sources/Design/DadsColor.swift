@@ -12,6 +12,7 @@ enum DadsColor {
     static let gray420 = Color(hex: 0x949494)
     static let gray536 = Color(hex: 0x767676)
     static let gray600 = Color(hex: 0x666666)
+    static let gray700 = Color(hex: 0x4D4D4D)
     static let gray800 = Color(hex: 0x333333)
     static let gray900 = Color(hex: 0x1A1A1A)
 
@@ -22,6 +23,11 @@ enum DadsColor {
     static let key900 = Color(hex: 0x0017C1)
     static let key1000 = Color(hex: 0x00118F)
     static let key1200 = Color(hex: 0x000060)
+
+    static let blue700 = Color(hex: 0x264AF4)
+    static let blue800 = Color(hex: 0x0031D8)
+    static let red50 = Color(hex: 0xFDEEEE)
+    static let red900 = Color(hex: 0xCE0000)
 
     static let yellow300 = Color(hex: 0xFFD43D)
 

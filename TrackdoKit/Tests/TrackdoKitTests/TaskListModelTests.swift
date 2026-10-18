@@ -49,6 +49,15 @@ final class ManualClock {
         #expect(model.openTasks.first?.title == "Write report")
     }
 
+    @Test func everyReloadRaisesTheRevision() async {
+        let model = await makeModel()
+        let revision = model.revision
+
+        await model.reload()
+
+        #expect(model.revision == revision + 1)
+    }
+
     // MARK: Adding and renaming
 
     @Test func addedTasksAreListedInOrder() async throws {

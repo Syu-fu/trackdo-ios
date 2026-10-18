@@ -11,6 +11,14 @@ public struct TaskItem: Identifiable, Equatable, Sendable {
     public let isRunning: Bool
     /// Time spent at the last reload.
     public let totalMs: UInt64
+
+    init(_ record: TaskRecord) {
+        id = record.id
+        title = record.title
+        isDone = record.isDone
+        isRunning = record.isInProgress
+        totalMs = record.totalMs
+    }
 }
 
 /// The running timer as the list shows it.
@@ -31,10 +39,18 @@ public enum TitleIssue: Error, Equatable, Sendable {
 
 /// Why the last command changed nothing.
 public enum TaskListIssue: Equatable, Sendable {
-    /// The task was deleted, e.g. on another device.
+    /// The task or entry was deleted, e.g. on another device.
     case taskGone
     /// The command failed otherwise, e.g. the state could not be saved.
     case failed(String)
+
+    init(_ error: any Error) {
+        switch error as? FfiError {
+        case .TaskNotFound, .TaskDeleted, .EntryNotFound, .EntryDeleted, .EntryNotRunning: self = .taskGone
+        case let .some(error): self = .failed(error.localizedDescription)
+        case nil: self = .failed(String(describing: error))
+        }
+    }
 }
 
 /// The task list screen's state. Every edit goes through the store, which
@@ -49,6 +65,8 @@ public final class TaskListModel {
     public private(set) var doneTasks: [TaskItem] = []
     public private(set) var running: RunningTimer?
     public private(set) var issue: TaskListIssue?
+    /// Grows with every reload, so other screens can follow changes.
+    public private(set) var revision = 0
 
     private let store: TrackdoStore
     private let now: Clock
@@ -65,9 +83,8 @@ public final class TaskListModel {
         let records = await store.tasks()
         let entry = await store.runningEntry()
         loadedAt = now()
-        let items = records.map {
-            TaskItem(id: $0.id, title: $0.title, isDone: $0.isDone, isRunning: $0.isInProgress, totalMs: $0.totalMs)
-        }
+        revision += 1
+        let items = records.map(TaskItem.init)
         openTasks = items.filter { !$0.isDone }
         doneTasks = items.filter(\.isDone)
         running = entry.map { entry in
@@ -141,13 +158,11 @@ public final class TaskListModel {
         do {
             try await command(store)
             issue = nil
-        } catch let error as FfiError {
-            if let titleIssue = Self.titleIssue(error) {
+        } catch {
+            if let titleIssue = Self.titleIssue(error as? FfiError) {
                 throw titleIssue
             }
-            issue = Self.listIssue(error)
-        } catch {
-            issue = .failed(String(describing: error))
+            issue = TaskListIssue(error)
         }
         await reload()
     }
@@ -156,19 +171,12 @@ public final class TaskListModel {
         title.trimmingCharacters(in: .whitespaces)
     }
 
-    private static func titleIssue(_ error: FfiError) -> TitleIssue? {
+    private static func titleIssue(_ error: FfiError?) -> TitleIssue? {
         switch error {
         case .EmptyTitle: .empty
         case .TitleContainsLineBreak: .containsLineBreak
         case let .TitleTooLong(max, _): .tooLong(max: Int(max))
         default: nil
-        }
-    }
-
-    private static func listIssue(_ error: FfiError) -> TaskListIssue {
-        switch error {
-        case .TaskNotFound, .TaskDeleted, .EntryNotFound, .EntryDeleted, .EntryNotRunning: .taskGone
-        default: .failed(error.localizedDescription)
         }
     }
 }

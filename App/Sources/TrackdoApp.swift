@@ -10,9 +10,7 @@ struct TrackdoApp: App {
         WindowGroup {
             switch model {
             case let .success(model):
-                NavigationStack {
-                    TaskListView(model: model.tasks, settings: model.settings)
-                }
+                TaskListView(model: model.tasks, store: model.store, settings: model.settings)
                 .task { await model.start() }
             case let .failure(error):
                 StartupFailureView(error: error)

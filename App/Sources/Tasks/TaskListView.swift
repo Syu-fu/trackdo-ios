@@ -1,16 +1,36 @@
 import SwiftUI
 import TrackdoKit
 
+/// Where the task list leads.
+enum TaskRoute: Hashable {
+    case task(String)
+    case sync
+}
+
 /// The app's home: every task, the running timer on top, and Sync settings
 /// in the toolbar. Everything works without a server.
 struct TaskListView: View {
     let model: TaskListModel
+    let store: TrackdoStore
     let settings: SettingsEditor
 
+    @State private var path: [TaskRoute] = []
     @State private var sheet: TaskTitleSheet.Purpose?
     @State private var pendingDeletion: TaskItem?
 
     var body: some View {
+        NavigationStack(path: $path) {
+            list
+                .navigationDestination(for: TaskRoute.self) { route in
+                    switch route {
+                    case let .task(id): TaskDetailView(taskId: id, store: store, revision: model.revision)
+                    case .sync: SettingsView(editor: settings)
+                    }
+                }
+        }
+    }
+
+    private var list: some View {
         List {
             if let issue = model.issue {
                 DadsNotificationBanner(kind: .error, title: issue.title, description: issue.description)
@@ -33,9 +53,7 @@ struct TaskListView: View {
         .navigationTitle("Tasks")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink {
-                    SettingsView(editor: settings)
-                } label: {
+                NavigationLink(value: TaskRoute.sync) {
                     Label("Sync Settings", systemImage: "gearshape")
                 }
             }
@@ -121,6 +139,8 @@ struct TaskListView: View {
 
     private func perform(_ action: TaskRowAction, on item: TaskItem) {
         switch action {
+        case .open:
+            path.append(.task(item.id))
         case .rename:
             sheet = .rename(item)
         case .toggleDone:
@@ -128,14 +148,5 @@ struct TaskListView: View {
         case .delete:
             pendingDeletion = item
         }
-    }
-}
-
-private extension View {
-    /// A banner as a list row: full width, no separator.
-    func bannerRow() -> some View {
-        listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-            .listRowBackground(DadsColor.white)
     }
 }

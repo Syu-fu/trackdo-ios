@@ -113,19 +113,23 @@ reads owned value types published by a `@MainActor` `@Observable` model.
   actions in a menu, sheets and confirmation dialogs.
   `App/Sources/Design` holds the DADS tokens (from
   `@digital-go-jp/design-tokens` 2.0.1) and the components the screens use:
-  buttons, input text, notification banners and the focus indicator. The
+  buttons, form fields, chip labels, notification banners and the focus
+  indicator. DADS has no time picker, so dates and times use the system
+  compact `DatePicker` inside the DADS field layout. The
   system font stands in for Noto Sans JP, and text sizes follow Dynamic Type.
   DADS defines only a light palette, so the app sets `UIUserInterfaceStyle`
   to `Light` for now.
-- Screen logic that can be tested, such as `TaskListModel` and
-  `SettingsEditor`, lives in `TrackdoKit`; views only lay it out.
+- Screen logic that can be tested, such as `TaskListModel`,
+  `TaskDetailModel` and `SettingsEditor`, lives in `TrackdoKit`; views only
+  lay it out.
 - The MVP has three screens:
   - Task list: add, complete or reopen, rename, delete. Each row starts or
     stops a timer and shows the task's total, counting up live. A banner
     above the list shows the running timer with a Stop button.
-  - Task detail: the task's entries, with editing, deleting and adding past
-    entries. Entries that need attention or were stopped by healing are
-    marked.
+  - Task detail, opened from a task's title: the total and the entries
+    newest first, with editing, deleting and adding past entries. Entries
+    that need fixing or were stopped automatically carry chip labels, and a
+    banner points to entries that need fixing.
   - Settings: server URL, token, connection check and sync status.
 - Not in the MVP: reports, widgets, Live Activities, notifications, search,
   iPad layouts.

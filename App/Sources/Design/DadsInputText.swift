@@ -15,6 +15,35 @@ struct DadsInputText<Field: View>: View {
     private static var radius: CGFloat { 8 }
 
     var body: some View {
+        DadsFormField(label: label, isRequired: isRequired, support: support, error: error) {
+            field()
+                .dadsFont(.std16N170)
+                .foregroundStyle(DadsColor.gray900)
+                .tint(DadsColor.key900)
+                .padding(.horizontal, 16)
+                .frame(minHeight: 48)
+                .background(DadsColor.white, in: .rect(cornerRadius: Self.radius))
+                .overlay {
+                    RoundedRectangle(cornerRadius: Self.radius)
+                        .strokeBorder(error == nil ? DadsColor.gray600 : DadsColor.error1, lineWidth: 1)
+                }
+                .dadsFocusRing(isFocused, cornerRadius: Self.radius)
+        }
+    }
+}
+
+/// The parts every DADS form control shares: item label, "※Required",
+/// support text above the control and "＊" error text below it. The control
+/// is read with the label, then the support and error text as its hint,
+/// like `aria-describedby`.
+struct DadsFormField<Control: View>: View {
+    let label: LocalizedStringResource
+    var isRequired = false
+    var support: LocalizedStringResource?
+    var error: LocalizedStringResource?
+    @ViewBuilder let control: () -> Control
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(label)
@@ -34,18 +63,7 @@ struct DadsInputText<Field: View>: View {
                     .foregroundStyle(DadsColor.gray600)
                     .accessibilityHidden(true)
             }
-            field()
-                .dadsFont(.std16N170)
-                .foregroundStyle(DadsColor.gray900)
-                .tint(DadsColor.key900)
-                .padding(.horizontal, 16)
-                .frame(minHeight: 48)
-                .background(DadsColor.white, in: .rect(cornerRadius: Self.radius))
-                .overlay {
-                    RoundedRectangle(cornerRadius: Self.radius)
-                        .strokeBorder(error == nil ? DadsColor.gray600 : DadsColor.error1, lineWidth: 1)
-                }
-                .dadsFocusRing(isFocused, cornerRadius: Self.radius)
+            control()
                 .accessibilityLabel(Text(label))
                 .accessibilityHint(hint)
             if let error {
@@ -58,8 +76,6 @@ struct DadsInputText<Field: View>: View {
         }
     }
 
-    /// The support and error text, read after the label like
-    /// `aria-describedby`.
     private var hint: String {
         let required: LocalizedStringResource? = isRequired ? "Required" : nil
         return [required, support, error].compactMap { $0.map { String(localized: $0) } }.joined(separator: ". ")
