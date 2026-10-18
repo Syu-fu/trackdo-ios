@@ -45,9 +45,17 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - name: Build XCFramework
         run: scripts/build-xcframework.sh
-      - name: Test
-        working-directory: TrackdoKit
-        run: swift test
+      - name: Test with coverage
+        run: scripts/swift-coverage.sh
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: target/test-server/bin
+          key: trackdo-server-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/test-server.sh') }}
+      - name: Integration tests
+        run: scripts/integration-test.sh
+      - name: Server log
+        if: failure()
+        run: cat target/test-server/server.log || true
       - name: Build for iOS Simulator
         working-directory: TrackdoKit
         run: xcodebuild -scheme TrackdoKit -destination 'generic/platform=iOS Simulator' build
