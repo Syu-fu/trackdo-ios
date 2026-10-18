@@ -1,7 +1,7 @@
 # trackdo-ios design
 
 The iOS client of trackdo. Domain logic, conflict resolution and timer healing
-live in [trackdo-core](https://github.com/Syu-fu/trackdo-core) v0.3.0; the
+live in [trackdo-core](https://github.com/Syu-fu/trackdo-core) v0.3.1; the
 sync API is specified in trackdo-server's
 [`docs/design.md`](https://github.com/Syu-fu/trackdo-server/blob/main/docs/design.md).
 This client only drives them.
@@ -40,9 +40,10 @@ reads owned value types published by a `@MainActor` `@Observable` model.
 
 - The replica is stored as JSON, `{"format": 1, "state": ReplicaStateDto}`,
   in `Application Support/trackdo/state.json`. `format` versions the local
-  file and is independent of `PROTOCOL_VERSION`. `ReplicaStateDto` is to be
-  provided by `trackdo-protocol`
-  ([trackdo-core#4](https://github.com/Syu-fu/trackdo-core/issues/4)).
+  file and is independent of `PROTOCOL_VERSION`. `ReplicaStateDto` comes
+  from `trackdo-protocol`, which validates it on load like server data.
+- A file that cannot be read is reported instead of being replaced by a new
+  replica, since it may hold unsent edits.
 - The file is written atomically after every call that changes state:
   commands, `acknowledge`, `reject`, `apply_remote` and `apply_snapshot`.
 - File protection is `completeUntilFirstUserAuthentication`, so background

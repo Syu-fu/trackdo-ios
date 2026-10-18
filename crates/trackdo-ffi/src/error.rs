@@ -40,6 +40,11 @@ pub enum FfiError {
     /// Practically unreachable: needs billions of writes within a millisecond.
     #[error("logical clock overflowed")]
     ClockOverflow,
+    /// The stored state was written by a newer app.
+    #[error("stored state format {format} is not supported")]
+    UnsupportedStateFormat { format: u32 },
+    #[error("stored state is invalid: {message}")]
+    InvalidState { message: String },
 }
 
 impl From<CommandError> for FfiError {

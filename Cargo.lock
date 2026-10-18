@@ -631,8 +631,8 @@ checksum = "06bdbd8cfc056b8d2e2e85f29b56a3bdbecb527cef81eb39e3e7b98af4652770"
 
 [[package]]
 name = "trackdo-core"
-version = "0.3.0"
-source = "git+https://github.com/Syu-fu/trackdo-core?tag=v0.3.0#23b3f8be0332d293dcfb0be533da64de79c2843d"
+version = "0.3.1"
+source = "git+https://github.com/Syu-fu/trackdo-core?tag=v0.3.1#28e7f42c3aa8a1abd4c79e3146794b7ad7082339"
 dependencies = [
  "thiserror",
 ]
@@ -652,8 +652,8 @@ dependencies = [
 
 [[package]]
 name = "trackdo-protocol"
-version = "0.3.0"
-source = "git+https://github.com/Syu-fu/trackdo-core?tag=v0.3.0#23b3f8be0332d293dcfb0be533da64de79c2843d"
+version = "0.3.1"
+source = "git+https://github.com/Syu-fu/trackdo-core?tag=v0.3.1#28e7f42c3aa8a1abd4c79e3146794b7ad7082339"
 dependencies = [
  "serde",
  "thiserror",

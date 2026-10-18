@@ -39,6 +39,21 @@ impl TrackdoCore {
         })
     }
 
+    /// The replica saved with [`Self::state_json`], with its device id and
+    /// unsent ops.
+    #[uniffi::constructor]
+    pub fn restore(state_json: Vec<u8>) -> Result<Arc<Self>, FfiError> {
+        let core = Core::restore(&state_json, SystemClock, UuidV7)?;
+        Ok(Arc::new(Self {
+            core: Mutex::new(core),
+        }))
+    }
+
+    /// Everything to persist, written after every call that changes state.
+    pub fn state_json(&self) -> Vec<u8> {
+        self.lock().state_json()
+    }
+
     /// Returns the new task's id.
     pub fn create(&self, title: String) -> Result<String, FfiError> {
         self.lock().create(&title)
@@ -181,6 +196,18 @@ mod tests {
         assert!(first.running_entry().is_some());
         assert!(second.tasks().is_empty());
         assert!(first.entries_for(id).unwrap()[0].is_running);
+    }
+
+    #[test]
+    fn restored_core_continues_where_it_was_saved() {
+        let core = TrackdoCore::new();
+        let id = core.create("a".to_owned()).unwrap();
+
+        let restored = TrackdoCore::restore(core.state_json()).unwrap();
+
+        assert_eq!(restored.tasks()[0].id, id);
+        assert_eq!(restored.next_push_batch(), core.next_push_batch());
+        assert!(TrackdoCore::restore(b"{}".to_vec()).is_err());
     }
 
     #[test]

@@ -3,6 +3,7 @@
 
 mod push;
 mod remote;
+mod state;
 
 pub use push::PushOutcome;
 pub use remote::{EventOutcome, SnapshotOutcome};
