@@ -84,6 +84,8 @@ reads owned value types published by a `@MainActor` `@Observable` model.
 - One event stream at a time. A `410 resync_required`, or an event id from
   another log, triggers a snapshot and a reconnect. The server sends a
   keepalive every 15 s, so 45 s without data counts as a disconnect.
+- Settings shows the sync status: off, connecting, live, paused in the
+  background, or the current problem, with Retry Now when retrying can help.
 - Backoff is exponential with full jitter, from 1 s up to 60 s. It resets
   after a successful connection or push, and `NWPathMonitor` retries at once
   when the network comes back.

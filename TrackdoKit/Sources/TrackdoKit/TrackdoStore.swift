@@ -20,6 +20,19 @@ public enum SyncProblem: Sendable, Equatable {
     case serverInconsistent(String)
 }
 
+/// What syncing is doing, for the settings screen.
+public enum SyncStatus: Sendable, Equatable {
+    /// No server is set up; edits stay on this device.
+    case off
+    /// Reaching the server or catching up.
+    case connecting
+    /// The event stream is open; edits are sent as they are made.
+    case live
+    /// The app is in the background; edits are sent on return.
+    case paused
+    case failing(SyncProblem)
+}
+
 /// Why the event stream has to be reopened.
 private enum StreamFailure: Error {
     case invalid(String)
@@ -46,13 +59,26 @@ public actor TrackdoStore {
     private var pushRequested = false
     /// Set by responses that retrying cannot fix.
     private var isHalted = false
+    /// Set in the background: nothing is sent until ``resume()``.
+    private var isSuspended = false
+    private var isStreaming = false
     private var problemHandler: (@Sendable (SyncProblem?) -> Void)?
+    private var statusHandler: (@Sendable (SyncStatus) -> Void)?
     private var changeHandler: (@Sendable () -> Void)?
 
     public private(set) var problem: SyncProblem? {
         didSet {
             if problem != oldValue {
                 problemHandler?(problem)
+            }
+            updateStatus()
+        }
+    }
+
+    public private(set) var syncStatus = SyncStatus.off {
+        didSet {
+            if syncStatus != oldValue {
+                statusHandler?(syncStatus)
             }
         }
     }
@@ -72,6 +98,11 @@ public actor TrackdoStore {
         problemHandler = handler
     }
 
+    /// Called with every change of ``syncStatus``.
+    public func onSyncStatus(_ handler: @escaping @Sendable (SyncStatus) -> Void) {
+        statusHandler = handler
+    }
+
     /// Called after every change to tasks, entries or unsent ops.
     public func onChange(_ handler: @escaping @Sendable () -> Void) {
         changeHandler = handler
@@ -84,9 +115,11 @@ public actor TrackdoStore {
         await stopSyncing()
         self.client = client
         isHalted = false
+        isSuspended = false
         backoff.reset()
         streamBackoff.reset()
         problem = nil
+        updateStatus()
         requestPush()
         streamTask = Task {
             await streamEvents()
@@ -98,12 +131,44 @@ public actor TrackdoStore {
     public func disconnect() async {
         client = nil
         await stopSyncing()
+        updateStatus()
+    }
+
+    /// For the background: closes the event stream and makes one last
+    /// attempt to send pending ops, without backing off. Nothing more is
+    /// sent until ``resume()``.
+    public func suspend() async {
+        isSuspended = true
+        await stopSyncing()
+        updateStatus()
+        guard let client, !isHalted else {
+            return
+        }
+        while let batch = core.nextPushBatch() {
+            guard await push(batch, with: client, retrying: false) else {
+                return
+            }
+        }
+    }
+
+    /// For the foreground: syncs again after ``suspend()``. Settings the
+    /// server refused stay stopped until they change.
+    public func resume() async {
+        guard isSuspended else {
+            return
+        }
+        isSuspended = false
+        guard let client, !isHalted else {
+            updateStatus()
+            return
+        }
+        await connect(client: client)
     }
 
     /// Reconnects at once instead of waiting out a backoff, e.g. when the
     /// network came back. Does nothing while stopped for new settings.
     public func retryNow() async {
-        guard let client, !isHalted else {
+        guard let client, !isHalted, !isSuspended else {
             return
         }
         await connect(client: client)
@@ -203,7 +268,7 @@ public actor TrackdoStore {
 
     private func requestPush() {
         pushRequested = true
-        guard pushTask == nil, client != nil, !isHalted else {
+        guard pushTask == nil, client != nil, !isHalted, !isSuspended else {
             return
         }
         pushTask = Task {
@@ -219,10 +284,25 @@ public actor TrackdoStore {
         while let streamTask {
             await streamTask.value
         }
+        isStreaming = false
+    }
+
+    private func updateStatus() {
+        syncStatus = if client == nil {
+            .off
+        } else if isSuspended {
+            .paused
+        } else if let problem {
+            .failing(problem)
+        } else if isStreaming {
+            .live
+        } else {
+            .connecting
+        }
     }
 
     private func pushPending() async {
-        while pushRequested, let client, !isHalted, !Task.isCancelled {
+        while pushRequested, let client, !isHalted, !isSuspended, !Task.isCancelled {
             pushRequested = false
             while let batch = core.nextPushBatch() {
                 guard await push(batch, with: client) else {
@@ -232,14 +312,15 @@ public actor TrackdoStore {
         }
     }
 
-    /// Sends one batch. Returns whether to go on sending.
-    private func push(_ batch: Data, with client: ServerClient) async -> Bool {
+    /// Sends one batch. Returns whether to go on sending; with `retrying`,
+    /// failures are retried after backing off.
+    private func push(_ batch: Data, with client: ServerClient, retrying: Bool = true) async -> Bool {
         let outcome: PushOutcome
         do {
             let response = try await client.postOps(batch)
             outcome = core.handlePushResponse(status: UInt16(clamping: response.status), body: response.body)
         } catch {
-            return await backOff(because: .unreachable)
+            return await backOff(because: .unreachable, retrying: retrying)
         }
         save()
 
@@ -256,10 +337,10 @@ public actor TrackdoStore {
         case .unsupportedProtocol:
             return halt(because: .unsupportedProtocol)
         case .retry:
-            return await backOff(because: .unreachable)
+            return await backOff(because: .unreachable, retrying: retrying)
         case let .unexpected(status, message):
             Self.logger.error("Unexpected POST /ops response \(status): \(message)")
-            return await backOff(because: .unexpected("\(status): \(message)"))
+            return await backOff(because: .unexpected("\(status): \(message)"), retrying: retrying)
         }
     }
 
@@ -275,8 +356,11 @@ public actor TrackdoStore {
                 }
                 let events = try await client.events(lastEventId: core.lastEventId())
                 streamBackoff.reset()
+                streamOpened()
                 try await receive(events)
             } catch {
+                isStreaming = false
+                updateStatus()
                 guard !Task.isCancelled else {
                     return
                 }
@@ -367,9 +451,20 @@ public actor TrackdoStore {
         return false
     }
 
-    /// Waits before the next attempt. Returns `false` when cancelled.
-    private func backOff(because problem: SyncProblem) async -> Bool {
+    /// The stream opening shows the server is reachable again.
+    private func streamOpened() {
+        isStreaming = true
+        problem = nil
+        updateStatus()
+    }
+
+    /// Waits before the next attempt. Returns `false` when cancelled, or at
+    /// once without `retrying`.
+    private func backOff(because problem: SyncProblem, retrying: Bool = true) async -> Bool {
         self.problem = problem
+        guard retrying else {
+            return false
+        }
         do {
             try await sleep(backoff.nextDelay())
         } catch {

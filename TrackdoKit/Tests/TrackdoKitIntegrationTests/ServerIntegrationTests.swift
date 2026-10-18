@@ -95,6 +95,22 @@ struct ServerIntegrationTests {
         #expect(await laptop.title(of: id) == "buy milk")
     }
 
+    @Test func backgroundEditsReachAnotherDeviceOnReturn() async throws {
+        let phone = try Device()
+        let laptop = try Device()
+        try await phone.connect()
+        try await laptop.connect()
+        let sent = try await phone.store.create(title: "sent before suspending")
+
+        await phone.store.suspend()
+        await laptop.eventually { _ in await laptop.title(of: sent) == "sent before suspending" }
+        let later = try await phone.store.create(title: "made in the background")
+        await phone.store.resume()
+
+        await laptop.eventually { _ in await laptop.title(of: later) == "made in the background" }
+        #expect(await phone.store.syncStatus != .paused)
+    }
+
     @Test func offlineEditsConvergeOnTheLastWrite() async throws {
         let phone = try Device()
         let laptop = try Device()

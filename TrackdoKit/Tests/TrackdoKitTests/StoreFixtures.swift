@@ -104,6 +104,7 @@ extension TrackdoStore {
         let (changes, changed) = AsyncStream<Void>.makeStream()
         onChange { changed.yield() }
         onProblem { _ in changed.yield() }
+        onSyncStatus { _ in changed.yield() }
         if try await condition(self) {
             return
         }

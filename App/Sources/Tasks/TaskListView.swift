@@ -13,6 +13,7 @@ struct TaskListView: View {
     let model: TaskListModel
     let store: TrackdoStore
     let settings: SettingsEditor
+    let syncStatus: SyncStatusModel
 
     @State private var path: [TaskRoute] = []
     @State private var sheet: TaskTitleSheet.Purpose?
@@ -24,7 +25,7 @@ struct TaskListView: View {
                 .navigationDestination(for: TaskRoute.self) { route in
                     switch route {
                     case let .task(id): TaskDetailView(taskId: id, store: store, revision: model.revision)
-                    case .sync: SettingsView(editor: settings)
+                    case .sync: SettingsView(editor: settings, status: syncStatus)
                     }
                 }
         }

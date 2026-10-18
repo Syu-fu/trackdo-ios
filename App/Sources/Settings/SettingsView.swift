@@ -5,6 +5,7 @@ import TrackdoKit
 /// the server accepted them; the banner at the top reports the outcome.
 struct SettingsView: View {
     @Bindable var editor: SettingsEditor
+    let status: SyncStatusModel
     @FocusState private var focus: Field?
     @State private var savedURL: String?
     @State private var isConfirmingRemoval = false
@@ -27,6 +28,7 @@ struct SettingsView: View {
                         .dadsFont(.std16N170)
                         .foregroundStyle(DadsColor.gray800)
                 }
+                SyncStatusSection(model: status)
                 banner
                 urlField
                 tokenField
