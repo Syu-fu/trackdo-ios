@@ -113,4 +113,52 @@ import Testing
             try await client.snapshot()
         }
     }
+
+    // MARK: GET /events
+
+    @Test func sessionTreatsSilenceBeyondThreeKeepalivesAsDisconnected() {
+        let configuration = ServerClient.makeSession().configuration
+
+        #expect(configuration.timeoutIntervalForRequest == 45)
+        #expect(configuration.urlCache == nil)
+    }
+
+    @Test func streamsEventsFromTheLastPosition() async throws {
+        server.respond(status: 200, json: ":keepalive\n\nid: log:5\nevent: op\ndata: {}\n\n")
+
+        var events: [ServerSentEvent] = []
+        for try await event in try await client.events(lastEventId: "log:4") {
+            events.append(event)
+        }
+
+        #expect(events == [ServerSentEvent(id: "log:5", event: "op", data: "{}")])
+        let request = try #require(server.requests.first)
+        #expect(request.method == "GET")
+        #expect(request.path == "/base/events")
+        #expect(request.headers["Last-Event-ID"] == "log:4")
+        #expect(request.headers["Accept"] == "text/event-stream")
+        #expect(request.headers["Authorization"] == "Bearer secret")
+        #expect(request.headers["Trackdo-Protocol"] == "3")
+    }
+
+    @Test func streamsFromTheStartWithoutAPosition() async throws {
+        server.respond(status: 200, json: "")
+
+        for try await _ in try await client.events(lastEventId: nil) {}
+
+        #expect(server.requests.first?.headers["Last-Event-ID"] == nil)
+    }
+
+    @Test(arguments: [
+        (410, #"{"error":{"code":"resync_required","message":"m"}}"#, ServerError.resyncRequired),
+        (401, #"{"error":{"code":"unauthorized","message":"m"}}"#, .unauthorized),
+        (503, "", .serverFailure(status: 503)),
+    ])
+    func streamErrorsAreClassified(status: Int, body: String, error: ServerError) async {
+        server.respond(status: status, json: body)
+
+        await #expect(throws: error) {
+            try await client.events(lastEventId: "log:1")
+        }
+    }
 }

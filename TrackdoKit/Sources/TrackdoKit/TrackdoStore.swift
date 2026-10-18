@@ -15,10 +15,21 @@ public enum SyncProblem: Sendable, Equatable {
     /// The state could not be written; unsaved changes are retried with the
     /// next save.
     case saveFailed(String)
+    /// The server sent data a correct server never sends, e.g. a time entry
+    /// under another task. Retried after backing off; worth reporting.
+    case serverInconsistent(String)
+}
+
+/// Why the event stream has to be reopened.
+private enum StreamFailure: Error {
+    case invalid(String)
+    case inconsistent(String)
+    case ended
 }
 
 /// Owns the replica: serializes every call to it, saves the state after each
-/// change and sends pending ops while connected.
+/// change, and while connected sends pending ops and receives the event
+/// stream.
 public actor TrackdoStore {
     public typealias Sleep = @Sendable (Duration) async throws -> Void
 
@@ -29,11 +40,14 @@ public actor TrackdoStore {
     private let sleep: Sleep
     private var client: ServerClient?
     private var backoff = Backoff()
+    private var streamBackoff = Backoff()
     private var pushTask: Task<Void, Never>?
+    private var streamTask: Task<Void, Never>?
     private var pushRequested = false
     /// Set by responses that retrying cannot fix.
     private var isHalted = false
     private var problemHandler: (@Sendable (SyncProblem?) -> Void)?
+    private var changeHandler: (@Sendable () -> Void)?
 
     public private(set) var problem: SyncProblem? {
         didSet {
@@ -55,22 +69,41 @@ public actor TrackdoStore {
         problemHandler = handler
     }
 
+    /// Called after every change to tasks, entries or unsent ops.
+    public func onChange(_ handler: @escaping @Sendable () -> Void) {
+        changeHandler = handler
+    }
+
     // MARK: Connection
 
-    /// Starts sending with `client`, e.g. after the settings changed.
+    /// Starts syncing with `client`, e.g. after the settings changed.
     public func connect(client: ServerClient) async {
-        await stopPushing()
+        await stopSyncing()
         self.client = client
         isHalted = false
         backoff.reset()
+        streamBackoff.reset()
         problem = nil
         requestPush()
+        streamTask = Task {
+            await streamEvents()
+            streamTask = nil
+        }
     }
 
-    /// Stops sending; edits stay queued until the next ``connect(client:)``.
+    /// Stops syncing; edits stay queued until the next ``connect(client:)``.
     public func disconnect() async {
         client = nil
-        await stopPushing()
+        await stopSyncing()
+    }
+
+    /// Reconnects at once instead of waiting out a backoff, e.g. when the
+    /// network came back. Does nothing while stopped for new settings.
+    public func retryNow() async {
+        guard let client, !isHalted else {
+            return
+        }
+        await connect(client: client)
     }
 
     /// Returns once nothing is being sent.
@@ -147,12 +180,16 @@ public actor TrackdoStore {
     /// changes nothing.
     private func perform<T>(_ command: (TrackdoCore) throws -> T) throws -> T {
         let result = try command(core)
+        defer { changeHandler?() }
         try file.save(core.stateJson())
         requestPush()
         return result
     }
 
+    /// Saves after syncing changed the state. A failure is reported, and the
+    /// next save writes the change too.
     private func save() {
+        defer { changeHandler?() }
         do {
             try file.save(core.stateJson())
         } catch {
@@ -172,9 +209,13 @@ public actor TrackdoStore {
         }
     }
 
-    private func stopPushing() async {
+    private func stopSyncing() async {
         pushTask?.cancel()
+        streamTask?.cancel()
         await waitUntilIdle()
+        while let streamTask {
+            await streamTask.value
+        }
     }
 
     private func pushPending() async {
@@ -217,6 +258,104 @@ public actor TrackdoStore {
             Self.logger.error("Unexpected POST /ops response \(status): \(message)")
             return await backOff(because: .unexpected("\(status): \(message)"))
         }
+    }
+
+    // MARK: Event stream
+
+    private func streamEvents() async {
+        var mustResync = false
+        while let client, !isHalted, !Task.isCancelled {
+            do {
+                if mustResync || core.needsSnapshot() {
+                    try await resync(with: client)
+                    mustResync = false
+                }
+                let events = try await client.events(lastEventId: core.lastEventId())
+                streamBackoff.reset()
+                try await receive(events)
+            } catch {
+                guard !Task.isCancelled else {
+                    return
+                }
+                switch error {
+                case ServerError.resyncRequired:
+                    mustResync = true
+                case ServerError.unauthorized:
+                    _ = halt(because: .unauthorized)
+                case ServerError.unsupportedProtocol:
+                    _ = halt(because: .unsupportedProtocol)
+                default:
+                    guard await waitToReconnect(because: Self.problem(for: error)) else {
+                        return
+                    }
+                }
+            }
+        }
+    }
+
+    /// Applies `op` events until the stream ends or must be reopened.
+    private func receive(_ events: ServerSentEvents<URLSession.AsyncBytes>) async throws {
+        for try await event in events {
+            guard event.event == "op", let id = event.id else {
+                continue
+            }
+            switch core.handleEvent(id: id, data: Data(event.data.utf8)) {
+            case let .applied(needsPush):
+                save()
+                if needsPush {
+                    requestPush()
+                }
+            case .resyncRequired:
+                throw ServerError.resyncRequired
+            case let .invalid(message):
+                throw StreamFailure.invalid(message)
+            case let .taskMismatch(entryId, expected, actual):
+                throw StreamFailure.inconsistent("entry \(entryId) of task \(expected) sent under \(actual)")
+            }
+        }
+        throw StreamFailure.ended
+    }
+
+    private func resync(with client: ServerClient) async throws {
+        let body = try await client.snapshot()
+        switch core.applySnapshot(body: body) {
+        case let .applied(needsPush):
+            save()
+            if needsPush {
+                requestPush()
+            }
+        case let .invalid(message):
+            throw StreamFailure.invalid(message)
+        case let .taskMismatch(entryId, expected, actual):
+            throw StreamFailure.inconsistent("snapshot moves entry \(entryId) from task \(expected) to \(actual)")
+        }
+    }
+
+    private static func problem(for error: any Error) -> SyncProblem {
+        switch error {
+        case let StreamFailure.invalid(message):
+            logger.error("Invalid data from the server: \(message)")
+            return .unexpected(message)
+        case let StreamFailure.inconsistent(message):
+            logger.fault("Inconsistent data from the server: \(message)")
+            return .serverInconsistent(message)
+        case let ServerError.unexpected(status, message):
+            logger.error("Unexpected response \(status): \(message)")
+            return .unexpected("\(status): \(message)")
+        default:
+            return .unreachable
+        }
+    }
+
+    /// Waits before reopening the stream. Returns `false` when cancelled.
+    private func waitToReconnect(because problem: SyncProblem) async -> Bool {
+        self.problem = problem
+        do {
+            try await sleep(streamBackoff.nextDelay())
+        } catch {
+            return false
+        }
+        return !Task.isCancelled
     }
 
     private func halt(because problem: SyncProblem) -> Bool {

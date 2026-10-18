@@ -9,6 +9,9 @@ public enum ServerError: Error, Equatable, Sendable {
     case unauthorized
     /// The app or the server needs updating.
     case unsupportedProtocol
+    /// The event stream cannot resume from the given position (`410`): fetch
+    /// a snapshot and reconnect.
+    case resyncRequired
     /// The server failed (`5xx`); try again later.
     case serverFailure(status: Int)
     /// A response the API does not specify, e.g. from something that is not
@@ -61,6 +64,38 @@ public struct ServerClient: Sendable {
         return try Self.successBody(of: response)
     }
 
+    /// `GET /events` from `lastEventId` (`TrackdoCore.lastEventId()`), open
+    /// until the server or the network ends it.
+    public func events(lastEventId: String?) async throws(ServerError) -> ServerSentEvents<URLSession.AsyncBytes> {
+        var request = authorized("events")
+        request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        if let lastEventId {
+            request.setValue(lastEventId, forHTTPHeaderField: "Last-Event-ID")
+        }
+        let (bytes, status) = try await Self.open(request, with: session)
+        switch status {
+        case 200:
+            return ServerSentEvents(bytes)
+        case 410:
+            throw .resyncRequired
+        default:
+            let body = try await Self.collect(bytes)
+            throw Self.failure(of: HTTPResponse(status: status, body: body))
+        }
+    }
+
+    /// A session for every request to the server. Event streams send a
+    /// keepalive every 15 s, so 45 s without data means the connection died.
+    /// Nothing is cached: a stale snapshot would hide newer ops.
+    public static func makeSession() -> URLSession {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 45
+        configuration.urlCache = nil
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        configuration.waitsForConnectivity = false
+        return URLSession(configuration: configuration)
+    }
+
     func authorized(_ path: String) -> URLRequest {
         var request = URLRequest(url: settings.url.endpoint(path))
         request.setValue("Bearer \(settings.token)", forHTTPHeaderField: "Authorization")
@@ -82,19 +117,55 @@ public struct ServerClient: Sendable {
         }
     }
 
+    private static func open(
+        _ request: URLRequest,
+        with session: URLSession
+    ) async throws(ServerError) -> (URLSession.AsyncBytes, Int) {
+        do {
+            let (bytes, response) = try await session.bytes(for: request)
+            guard let http = response as? HTTPURLResponse else {
+                throw URLError(.badServerResponse)
+            }
+            return (bytes, http.statusCode)
+        } catch let error as URLError {
+            throw .offline(error.code)
+        } catch {
+            throw .offline(.unknown)
+        }
+    }
+
+    private static func collect(_ bytes: URLSession.AsyncBytes) async throws(ServerError) -> Data {
+        do {
+            var body = Data()
+            for try await byte in bytes {
+                body.append(byte)
+            }
+            return body
+        } catch let error as URLError {
+            throw .offline(error.code)
+        } catch {
+            throw .offline(.unknown)
+        }
+    }
+
     /// The body of a `200`, or the error any endpoint may answer with.
     static func successBody(of response: HTTPResponse) throws(ServerError) -> Data {
+        guard response.status == 200 else {
+            throw failure(of: response)
+        }
+        return response.body
+    }
+
+    private static func failure(of response: HTTPResponse) -> ServerError {
         switch response.status {
-        case 200:
-            return response.body
         case 401:
-            throw .unauthorized
+            .unauthorized
         case 400 where errorCode(of: response.body) == "unsupported_protocol_version":
-            throw .unsupportedProtocol
+            .unsupportedProtocol
         case 500...599:
-            throw .serverFailure(status: response.status)
+            .serverFailure(status: response.status)
         default:
-            throw unexpected(response)
+            unexpected(response)
         }
     }
 

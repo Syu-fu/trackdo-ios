@@ -3,41 +3,18 @@ import Testing
 import TrackdoFFI
 @testable import TrackdoKit
 
-/// Records backoff delays instead of waiting.
-final class RecordedSleeps: @unchecked Sendable {
-    private let lock = NSLock()
-    private var delays: [Duration] = []
-
-    var count: Int { lock.withLock { delays.count } }
-
-    func sleep(_ delay: Duration) async throws {
-        lock.withLock { delays.append(delay) }
-    }
-}
-
-func accepted(_ request: StubServer.Recorded) -> (status: Int, body: Data) {
-    let ops = try! JSONSerialization.jsonObject(with: request.body) as! [[String: Any]]
-    let ids = ops.map { $0["op_id"] as! String }
-    return (200, try! JSONSerialization.data(withJSONObject: ["accepted": ids]))
-}
-
-func firstOpId(of request: StubServer.Recorded) -> String {
-    let ops = try! JSONSerialization.jsonObject(with: request.body) as! [[String: Any]]
-    return ops[0]["op_id"] as! String
-}
-
-let offline: StubServer.Handler = { _ in throw URLError(.notConnectedToInternet) }
-
-func status(_ status: Int, _ json: String = "") -> StubServer.Handler {
-    { _ in (status, Data(json.utf8)) }
-}
-
 @Suite struct TrackdoStoreTests {
-    let server = StubServer(handler: accepted)
+    let server = StubServer(handler: routes())
     let sleeps = RecordedSleeps()
     let file = StateFile(
         directory: FileManager.default.temporaryDirectory.appending(path: "TrackdoStoreTests-\(UUID().uuidString)")
     )
+
+    /// The snapshot never completes, keeping the event stream out of these
+    /// tests of sending.
+    init() {
+        server.holdOpen("snapshot")
+    }
 
     func makeStore(connected: Bool = true) async throws -> TrackdoStore {
         let sleeps = sleeps
@@ -124,7 +101,7 @@ func status(_ status: Int, _ json: String = "") -> StubServer.Handler {
         _ = try await store.create(title: "a")
         await store.waitUntilIdle()
 
-        #expect(server.requests.map(\.path) == ["/base/ops"])
+        #expect(server.requests(to: "ops").count == 1)
         #expect(try savedCore().nextPushBatch() == nil)
         #expect(await store.problem == nil)
     }
@@ -136,7 +113,7 @@ func status(_ status: Int, _ json: String = "") -> StubServer.Handler {
         await store.connect(client: client)
         await store.waitUntilIdle()
 
-        #expect(server.requests.count == 1)
+        #expect(server.requests(to: "ops").count == 1)
         #expect(try savedCore().nextPushBatch() == nil)
     }
 
@@ -149,24 +126,24 @@ func status(_ status: Int, _ json: String = "") -> StubServer.Handler {
         await store.connect(client: client)
         await store.waitUntilIdle()
 
-        #expect(server.requests.count == 2)
+        #expect(server.requests(to: "ops").count == 2)
         #expect(try savedCore().nextPushBatch() == nil)
     }
 
     @Test func rejectedOpIsDroppedAndTheRestSent() async throws {
-        server.respond(inOrder: [
+        server.respond(routes(ops: inOrder([
             { request in
                 let body = #"{"error":{"code":"invalid_op","message":"m","op_id":"\#(firstOpId(of: request))"}}"#
                 return (422, Data(body.utf8))
             },
             accepted,
-        ])
+        ])))
         let store = try await makeStore()
 
         _ = try await store.create(title: "a")
         await store.waitUntilIdle()
 
-        #expect(server.requests.count == 2)
+        #expect(server.requests(to: "ops").count == 2)
         #expect(try savedCore().nextPushBatch() == nil)
         #expect(await store.problem == nil)
     }
@@ -176,7 +153,7 @@ func status(_ status: Int, _ json: String = "") -> StubServer.Handler {
         (400, #"{"error":{"code":"unsupported_protocol_version","message":"m"}}"#, .unsupportedProtocol),
     ])
     func sendingStopsUntilSettingsChange(status: Int, body: String, problem: SyncProblem) async throws {
-        server.respond(status: status, json: body)
+        server.respond(routes(ops: TrackdoKitTests.status(status, body)))
         let store = try await makeStore()
 
         _ = try await store.create(title: "a")
@@ -184,14 +161,14 @@ func status(_ status: Int, _ json: String = "") -> StubServer.Handler {
         _ = try await store.create(title: "b")
         await store.waitUntilIdle()
 
-        #expect(server.requests.count == 1)
+        #expect(server.requests(to: "ops").count == 1)
         #expect(await store.problem == problem)
         #expect(sleeps.count == 0)
         #expect(try savedCore().nextPushBatch() != nil)
     }
 
     @Test func reconnectingRetriesAfterAStop() async throws {
-        server.respond(inOrder: [status(401), accepted])
+        server.respond(routes(ops: inOrder([status(401), accepted])))
         let store = try await makeStore()
         _ = try await store.create(title: "a")
         await store.waitUntilIdle()
@@ -199,7 +176,7 @@ func status(_ status: Int, _ json: String = "") -> StubServer.Handler {
         await store.connect(client: client)
         await store.waitUntilIdle()
 
-        #expect(server.requests.count == 2)
+        #expect(server.requests(to: "ops").count == 2)
         #expect(await store.problem == nil)
     }
 
@@ -209,7 +186,7 @@ func status(_ status: Int, _ json: String = "") -> StubServer.Handler {
         (status(418, "teapot"), .unexpected("418: teapot")),
     ] as [(StubServer.Handler, SyncProblem)])
     func failuresAreRetriedAfterBackingOff(failure: @escaping StubServer.Handler, problem: SyncProblem) async throws {
-        server.respond(inOrder: [failure, failure, accepted])
+        server.respond(routes(ops: inOrder([failure, failure, accepted])))
         let store = try await makeStore()
         let observed = ProblemLog()
         await store.onProblem { observed.append($0) }
@@ -217,14 +194,14 @@ func status(_ status: Int, _ json: String = "") -> StubServer.Handler {
         _ = try await store.create(title: "a")
         await store.waitUntilIdle()
 
-        #expect(server.requests.count == 3)
+        #expect(server.requests(to: "ops").count == 3)
         #expect(sleeps.count == 2)
         #expect(observed.values == [problem, nil])
         #expect(await store.problem == nil)
     }
 
     @Test func disconnectingStopsRetrying() async throws {
-        server.respond(status: 503, json: "")
+        server.respond(routes(ops: status(503)))
         let (backingOff, entered) = AsyncStream<Void>.makeStream()
         let store = try TrackdoStore(file: file, sleep: { _ in
             entered.yield()
@@ -239,7 +216,7 @@ func status(_ status: Int, _ json: String = "") -> StubServer.Handler {
         await store.disconnect()
         await store.waitUntilIdle()
 
-        #expect(server.requests.count == 1)
+        #expect(server.requests(to: "ops").count == 1)
         #expect(try savedCore().nextPushBatch() != nil)
     }
 }

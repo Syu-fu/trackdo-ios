@@ -18,11 +18,15 @@ final class StubServer: @unchecked Sendable {
     private let lock = NSLock()
     private var handler: Handler
     private var recorded: [Recorded] = []
+    private var openPaths: Set<String> = []
+    private let arrivals: AsyncStream<Recorded>
+    private let arrived: AsyncStream<Recorded>.Continuation
 
     init(handler: @escaping Handler = { _ in (200, Data()) }) {
         let host = "stub-\(UUID().uuidString.lowercased()).test"
         url = try! ServerURL("https://\(host)/base")
         self.handler = handler
+        (arrivals, arrived) = AsyncStream.makeStream()
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [StubURLProtocol.self]
         session = URLSession(configuration: configuration)
@@ -37,21 +41,44 @@ final class StubServer: @unchecked Sendable {
         respond { _ in (status, Data(json.utf8)) }
     }
 
-    /// Answers the n-th request with the n-th handler, repeating the last.
-    func respond(inOrder handlers: [Handler]) {
-        let next = Counter()
-        respond { request in
-            try handlers[min(next.increment(), handlers.count - 1)](request)
+    var requests: [Recorded] { lock.withLock { recorded } }
+
+    func requests(to endpoint: String) -> [Recorded] {
+        requests.filter { $0.path == url.endpoint(endpoint).path() }
+    }
+
+    /// `200` responses to `endpoint` stay open after their body, like an
+    /// event stream, until the client cancels them.
+    func holdOpen(_ endpoint: String) {
+        lock.withLock { _ = openPaths.insert(url.endpoint(endpoint).path()) }
+    }
+
+    /// Returns once `count` requests to `endpoint` arrived. One waiter at a
+    /// time.
+    func waitForRequests(to endpoint: String, count: Int) async {
+        let path = url.endpoint(endpoint).path()
+        var seen = requests(to: endpoint).count
+        guard seen < count else {
+            return
+        }
+        for await request in arrivals where request.path == path {
+            seen = requests(to: endpoint).count
+            if seen >= count {
+                return
+            }
         }
     }
 
-    var requests: [Recorded] { lock.withLock { recorded } }
+    fileprivate func holdsOpen(_ path: String) -> Bool {
+        lock.withLock { openPaths.contains(path) }
+    }
 
     fileprivate func handle(_ request: Recorded) throws -> (status: Int, body: Data) {
         let handler = lock.withLock {
             recorded.append(request)
             return self.handler
         }
+        arrived.yield(request)
         return try handler(request)
     }
 }
@@ -95,10 +122,18 @@ final class StubURLProtocol: URLProtocol, @unchecked Sendable {
         )
         do {
             let (status, body) = try server.handle(recorded)
-            let response = HTTPURLResponse(url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: nil)!
+            // As the real server does. Without a type, URLSession holds the
+            // response back to sniff the first 512 bytes.
+            let type = url.lastPathComponent == "events" && status == 200 ? "text/event-stream" : "application/json"
+            let response = HTTPURLResponse(
+                url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": type]
+            )!
             client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
             client?.urlProtocol(self, didLoad: body)
-            client?.urlProtocolDidFinishLoading(self)
+            // Like the real server, only a streaming 200 stays open.
+            if status != 200 || !server.holdsOpen(recorded.path) {
+                client?.urlProtocolDidFinishLoading(self)
+            }
         } catch {
             client?.urlProtocol(self, didFailWithError: error)
         }
