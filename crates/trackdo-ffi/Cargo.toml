@@ -16,6 +16,7 @@ crate-type = ["lib", "staticlib", "cdylib"]
 trackdo-core.workspace = true
 trackdo-protocol.workspace = true
 uniffi.workspace = true
+uuid.workspace = true
 
 [lints]
 workspace = true

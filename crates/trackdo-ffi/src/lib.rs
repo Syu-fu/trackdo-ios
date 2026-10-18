@@ -1,5 +1,7 @@
 //! UniFFI bindings of trackdo-core for the iOS client.
 
+mod env;
+
 uniffi::setup_scaffolding!();
 
 /// Version of the sync protocol these bindings speak, sent as the
