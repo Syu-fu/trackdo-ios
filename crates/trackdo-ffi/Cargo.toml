@@ -15,6 +15,7 @@ crate-type = ["lib", "staticlib", "cdylib"]
 [dependencies]
 trackdo-core.workspace = true
 trackdo-protocol.workspace = true
+thiserror.workspace = true
 uniffi.workspace = true
 uuid.workspace = true
 

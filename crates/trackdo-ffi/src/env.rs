@@ -9,10 +9,7 @@ use trackdo_core::time_entry::TimeEntryId;
 use uuid::Uuid;
 
 /// The device's wall clock in UTC milliseconds.
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "used once the replica is exported")
-)]
+#[derive(Clone)]
 pub(crate) struct SystemClock;
 
 impl Clock for SystemClock {
@@ -26,10 +23,6 @@ impl Clock for SystemClock {
 }
 
 /// UUIDv7 ids, strictly increasing within the process.
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "used once the replica is exported")
-)]
 pub(crate) struct UuidV7;
 
 impl IdGen for UuidV7 {
