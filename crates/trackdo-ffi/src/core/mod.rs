@@ -2,8 +2,10 @@
 //! milliseconds and owned records.
 
 mod push;
+mod remote;
 
 pub use push::PushOutcome;
+pub use remote::{EventOutcome, SnapshotOutcome};
 
 use trackdo_core::env::{Clock, IdGen};
 use trackdo_core::hlc::DeviceId;
@@ -153,7 +155,7 @@ pub(crate) mod tests {
     pub(crate) struct TestClock(Arc<AtomicU64>);
 
     impl TestClock {
-        fn advance(&self, millis: u64) {
+        pub(crate) fn advance(&self, millis: u64) {
             self.0.fetch_add(millis, Ordering::SeqCst);
         }
     }

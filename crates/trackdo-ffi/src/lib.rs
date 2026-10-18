@@ -15,7 +15,7 @@ use uuid::Uuid;
 use crate::core::Core;
 use crate::env::{SystemClock, UuidV7};
 
-pub use crate::core::PushOutcome;
+pub use crate::core::{EventOutcome, PushOutcome, SnapshotOutcome};
 pub use error::FfiError;
 pub use views::{EntryRecord, TaskRecord};
 
@@ -121,6 +121,26 @@ impl TrackdoCore {
     pub fn handle_push_response(&self, status: u16, body: Vec<u8>) -> PushOutcome {
         self.lock().handle_push_response(status, &body)
     }
+
+    /// No server log is known yet: fetch `GET /snapshot` before streaming.
+    pub fn needs_snapshot(&self) -> bool {
+        self.lock().needs_snapshot()
+    }
+
+    /// `Last-Event-ID` for `GET /events`, or `None` to stream from the start.
+    pub fn last_event_id(&self) -> Option<String> {
+        self.lock().last_event_id()
+    }
+
+    /// Applies an `op` event; persist the state afterwards.
+    pub fn handle_event(&self, id: String, data: Vec<u8>) -> EventOutcome {
+        self.lock().handle_event(&id, &data)
+    }
+
+    /// Merges a `GET /snapshot` body; persist the state afterwards.
+    pub fn apply_snapshot(&self, body: Vec<u8>) -> SnapshotOutcome {
+        self.lock().apply_snapshot(&body)
+    }
 }
 
 impl TrackdoCore {
@@ -202,5 +222,26 @@ mod tests {
 
         assert_eq!(outcome, PushOutcome::Accepted);
         assert_eq!(core.next_push_batch(), None);
+    }
+
+    #[test]
+    fn snapshot_and_events_move_the_stream_position() {
+        let log = "01928f30-0000-7000-8000-000000000001";
+        let core = TrackdoCore::new();
+        let other = TrackdoCore::new();
+        other.create("a".to_owned()).unwrap();
+        let ops: Vec<serde_json::Value> =
+            serde_json::from_slice(&other.next_push_batch().unwrap()).unwrap();
+        let snapshot =
+            serde_json::json!({ "log_id": log, "seq": 0, "tasks": [], "time_entries": [] });
+        assert!(core.needs_snapshot());
+
+        let applied = core.apply_snapshot(serde_json::to_vec(&snapshot).unwrap());
+        let received = core.handle_event(format!("{log}:1"), serde_json::to_vec(&ops[0]).unwrap());
+
+        assert_eq!(applied, SnapshotOutcome::Applied { needs_push: false });
+        assert_eq!(received, EventOutcome::Applied { needs_push: false });
+        assert!(!core.needs_snapshot());
+        assert_eq!(core.last_event_id(), Some(format!("{log}:1")));
     }
 }
