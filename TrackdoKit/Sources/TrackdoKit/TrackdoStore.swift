@@ -57,11 +57,14 @@ public actor TrackdoStore {
         }
     }
 
-    /// Opens the replica saved in `file`, or a new one.
-    public init(file: StateFile, sleep: @escaping Sleep = { try await Task.sleep(for: $0) }) throws {
+    /// Opens the replica saved in `file`, or a new one. `sleep` waits out
+    /// backoff delays; `nil` waits in real time.
+    public init(file: StateFile, sleep: Sleep? = nil) throws {
         core = try file.openCore()
         self.file = file
-        self.sleep = sleep
+        // Not a default argument: Swift 6.3 corrupts the task allocator when
+        // an async closure in a default argument is awaited.
+        self.sleep = sleep ?? { try await Task.sleep(for: $0) }
     }
 
     /// Called with every change of ``problem``.

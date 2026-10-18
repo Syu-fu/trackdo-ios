@@ -165,3 +165,21 @@ import TrackdoFFI
         }
     }
 }
+
+/// Waits out a real backoff delay, of up to a second.
+@Suite(.timeLimit(.minutes(1))) struct TrackdoStoreRealBackoffTests {
+    @Test func reconnectsAfterWaitingInRealTime() async throws {
+        let server = StubServer(handler: routes(events: inOrder([offline, status(200)])))
+        let file = StateFile(
+            directory: FileManager.default.temporaryDirectory.appending(path: "TrackdoStoreRealBackoffTests-\(UUID().uuidString)")
+        )
+        let store = try TrackdoStore(file: file)
+
+        await store.connect(client: ServerClient(
+            settings: try ServerSettings(url: server.url, token: "secret"),
+            session: server.session
+        ))
+        await server.waitForRequests(to: "events", count: 2)
+        await store.disconnect()
+    }
+}
