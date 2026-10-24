@@ -121,6 +121,11 @@ reads owned value types published by a `@MainActor` `@Observable` model.
   system font stands in for Noto Sans JP, and text sizes follow Dynamic Type.
   DADS defines only a light palette, so the app sets `UIUserInterfaceStyle`
   to `Light` for now.
+- Controls are placed by how often they are used. Frequent actions take one
+  tap and sit within the thumb's reach: Add Task in the bottom trailing
+  corner, and a checkbox and a timer button on every task row. Rare actions
+  such as renaming and deleting wait in a row's More menu and its swipe
+  actions. Task rows use DADS dense text so more of them fit on screen.
 - The app is in English and Japanese. Strings live in String Catalogs
   (`Localizable.xcstrings` and `InfoPlist.xcstrings`); the build extracts
   them from the code, and `scripts/check-localizations.sh` fails when the
@@ -131,9 +136,10 @@ reads owned value types published by a `@MainActor` `@Observable` model.
   `TaskDetailModel` and `SettingsEditor`, lives in `TrackdoKit`; views only
   lay it out.
 - The MVP has three screens:
-  - Task list: add, complete or reopen, rename, delete. Each row starts or
-    stops a timer and shows the task's total, counting up live. A banner
-    above the list shows the running timer with a Stop button.
+  - Task list: add, complete or reopen, rename, delete. Each row completes
+    or reopens its task with a checkbox, starts or stops a timer and shows
+    the task's total, counting up live. A banner above the list shows the
+    running timer with a Stop button.
   - Task detail, opened from a task's title: the total and the entries
     newest first, with editing, deleting and adding past entries. Entries
     that need fixing or were stopped automatically carry chip labels, and a

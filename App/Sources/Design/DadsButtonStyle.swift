@@ -15,10 +15,35 @@ struct DadsButtonStyle: ButtonStyle {
         case large
         /// At least 96 × 48.
         case medium
+        /// 44 × 44, just the target size, for a button labeled by an icon
+        /// alone. Give it an accessibility label.
+        case icon
 
-        var minWidth: CGFloat { self == .large ? 136 : 96 }
-        var minHeight: CGFloat { self == .large ? 56 : 48 }
-        var verticalPadding: CGFloat { self == .large ? 12 : 8 }
+        var minWidth: CGFloat {
+            switch self {
+            case .large: 136
+            case .medium: 96
+            case .icon: 44
+            }
+        }
+
+        var minHeight: CGFloat {
+            switch self {
+            case .large: 56
+            case .medium: 48
+            case .icon: 44
+            }
+        }
+
+        var verticalPadding: CGFloat {
+            switch self {
+            case .large: 12
+            case .medium: 8
+            case .icon: 0
+            }
+        }
+
+        var horizontalPadding: CGFloat { self == .icon ? 0 : 16 }
     }
 
     let kind: Kind
@@ -45,7 +70,7 @@ private struct DadsButton: View {
             .underline(kind == .text || pressed)
             .foregroundStyle(foreground(pressed: pressed))
             .padding(.vertical, size.verticalPadding)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, size.horizontalPadding)
             .frame(minWidth: size.minWidth, minHeight: size.minHeight)
             .background(background(pressed: pressed), in: .rect(cornerRadius: Self.radius))
             .overlay {

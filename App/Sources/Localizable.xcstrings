@@ -154,6 +154,16 @@
         }
       }
     },
+    "Complete %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@を完了にする"
+          }
+        }
+      }
+    },
     "Connecting…" : {
       "localizations" : {
         "ja" : {
@@ -606,6 +616,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未完了に戻す"
+          }
+        }
+      }
+    },
+    "Reopen %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@を未完了に戻す"
           }
         }
       }

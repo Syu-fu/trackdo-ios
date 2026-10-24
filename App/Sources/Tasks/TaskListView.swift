@@ -7,8 +7,9 @@ enum TaskRoute: Hashable {
     case sync
 }
 
-/// The app's home: every task, the running timer on top, and Sync settings
-/// in the toolbar. Everything works without a server.
+/// The app's home: every task, the running timer on top, Sync settings in
+/// the navigation bar and Add Task at the bottom. Everything works without a
+/// server.
 struct TaskListView: View {
     let model: TaskListModel
     let store: TrackdoStore
@@ -58,8 +59,13 @@ struct TaskListView: View {
                     Label("Sync Settings", systemImage: "gearshape")
                 }
             }
-            ToolbarItem(placement: .primaryAction) {
+            // Adding is frequent, so it sits in the bottom trailing corner,
+            // where the thumb of the hand holding the phone reaches.
+            ToolbarSpacer(.flexible, placement: .bottomBar)
+            ToolbarItem(placement: .bottomBar) {
                 Button("Add Task", systemImage: "plus") { sheet = .add }
+                    .buttonStyle(.glassProminent)
+                    .tint(DadsColor.key900)
             }
         }
         .sheet(item: $sheet) { purpose in
@@ -91,6 +97,9 @@ struct TaskListView: View {
             Section {
                 ForEach(items) { item in
                     TaskRow(model: model, item: item) { perform($0, on: item) }
+                        // The row's 44 pt targets carry their own space; the
+                        // default insets would only make the row taller.
+                        .listRowInsets(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
                         .listRowBackground(DadsColor.white)
                         .listRowSeparatorTint(DadsColor.gray420)
                         .swipeActions(edge: .leading) {

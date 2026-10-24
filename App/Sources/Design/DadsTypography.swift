@@ -9,7 +9,9 @@ enum DadsTextStyle {
     case std17B170
     case std16B170
     case std16N170
+    case dns16B130
     case dns16N130
+    case dns14N130
     case oln16B100
 
     fileprivate var size: CGFloat {
@@ -17,25 +19,32 @@ enum DadsTextStyle {
         case .std24B150: 24
         case .std20B150: 20
         case .std17B170: 17
-        case .std16B170, .std16N170, .dns16N130, .oln16B100: 16
+        case .std16B170, .std16N170, .dns16B130, .dns16N130, .oln16B100: 16
+        case .dns14N130: 14
         }
     }
 
     fileprivate var isBold: Bool {
-        self != .std16N170 && self != .dns16N130
+        switch self {
+        case .std16N170, .dns16N130, .dns14N130: false
+        default: true
+        }
     }
 
     fileprivate var lineHeight: CGFloat {
         switch self {
         case .std24B150, .std20B150: 1.5
         case .std17B170, .std16B170, .std16N170: 1.7
-        case .dns16N130: 1.3
+        case .dns16B130, .dns16N130, .dns14N130: 1.3
         case .oln16B100: 1.0
         }
     }
 
     fileprivate var letterSpacing: CGFloat {
-        self == .dns16N130 ? 0 : 0.02
+        switch self {
+        case .dns16B130, .dns16N130, .dns14N130: 0
+        default: 0.02
+        }
     }
 
     fileprivate var dynamicTypeStyle: Font.TextStyle {
@@ -43,7 +52,8 @@ enum DadsTextStyle {
         case .std24B150: .title2
         case .std20B150: .title3
         case .std17B170: .headline
-        case .std16B170, .std16N170, .dns16N130, .oln16B100: .body
+        case .std16B170, .std16N170, .dns16B130, .dns16N130, .oln16B100: .body
+        case .dns14N130: .subheadline
         }
     }
 }

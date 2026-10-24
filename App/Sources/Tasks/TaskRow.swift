@@ -9,10 +9,13 @@ enum TaskRowAction {
     case delete
 }
 
-/// One task in the DADS resource list style (components/resource-list):
-/// title and total time, the timer button and a More menu. The row holds
-/// buttons, so only the title opens the task, as DADS asks. The menu offers
-/// the same actions as the swipe actions, for people who cannot swipe.
+/// One task in the DADS resource list style (components/resource-list),
+/// laid out by how often each part is used. Completing and timing are
+/// frequent, so each takes one tap: the checkbox on the leading side, as
+/// DADS places checkboxes, and the timer button. Renaming and deleting are
+/// rare, so they wait in the More menu, which also stands in for the swipe
+/// actions. Dense text keeps the row short so more tasks fit on screen.
+/// The row holds buttons, so only the title and time open the task.
 struct TaskRow: View {
     let model: TaskListModel
     let item: TaskItem
@@ -22,52 +25,65 @@ struct TaskRow: View {
 
     var body: some View {
         let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
-            : AnyLayout(HStackLayout(spacing: 16))
-        layout {
-            contents
-            HStack(spacing: 8) {
-                timerButton
-                moreMenu
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+            : AnyLayout(HStackLayout(spacing: 8))
+        HStack(spacing: 4) {
+            doneButton
+            layout {
+                contents
+                HStack(spacing: 4) {
+                    timerButton
+                    moreMenu
+                }
             }
         }
-        .padding(.vertical, 16)
-        // The resource list's separator spans the whole row.
-        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+        .padding(.vertical, 4)
+        // The resource list's separator spans the whole row, between the
+        // list's 16 pt margins; the row itself is inset only 6 pt.
+        .alignmentGuide(.listRowSeparatorLeading) { _ in 10 }
+        .alignmentGuide(.listRowSeparatorTrailing) { $0.width - 10 }
+    }
+
+    private var doneButton: some View {
+        Button {
+            onAction(.toggleDone)
+        } label: {
+            Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
+                .font(.title2)
+                .foregroundStyle(item.isDone ? DadsColor.key900 : DadsColor.gray600)
+        }
+        .buttonStyle(CheckboxButtonStyle())
+        .accessibilityLabel(item.isDone
+            ? Text("Reopen \(item.displayTitle)")
+            : Text("Complete \(item.displayTitle)"))
     }
 
     private var contents: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Button {
-                onAction(.open)
-            } label: {
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: item.displayTitle)
-                        .strikethrough(item.isDone)
-                        .multilineTextAlignment(.leading)
-                    Image(systemName: "chevron.forward")
-                        .imageScale(.small)
-                        .accessibilityHidden(true)
+        Button {
+            onAction(.open)
+        } label: {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(verbatim: item.displayTitle)
+                    .strikethrough(item.isDone)
+                    .multilineTextAlignment(.leading)
+                    .dadsFont(.dns16B130)
+                    .foregroundStyle(item.isDone ? DadsColor.gray600 : DadsColor.gray900)
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    let ms = model.totalMs(of: item, at: context.date)
+                    Text(verbatim: ElapsedTime.clock(ms))
+                        .dadsFont(.dns14N130)
+                        .monospacedDigit()
+                        .foregroundStyle(DadsColor.gray700)
+                        .accessibilityLabel(Text("Total \(ElapsedTime.spoken(ms))"))
                 }
-                .dadsFont(.std17B170)
-                .foregroundStyle(item.isDone ? DadsColor.gray600 : DadsColor.gray900)
-                .frame(minHeight: 44)
-                .contentShape(.rect)
             }
-            .buttonStyle(.plain)
-            .accessibilityHint(Text("Shows its time entries."))
-            TimelineView(.periodic(from: .now, by: 1)) { context in
-                let ms = model.totalMs(of: item, at: context.date)
-                Text(verbatim: ElapsedTime.clock(ms))
-                    .dadsFont(.dns16N130)
-                    .monospacedDigit()
-                    .foregroundStyle(DadsColor.gray800)
-                    .accessibilityLabel(Text("Total \(ElapsedTime.spoken(ms))"))
-            }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(.rect)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityValue(item.isDone ? Text("Done") : Text(verbatim: ""))
+        .accessibilityHint(Text("Shows its time entries."))
     }
 
     @ViewBuilder private var timerButton: some View {
@@ -76,29 +92,26 @@ struct TaskRow: View {
                 Task { await model.stop() }
             } label: {
                 Label("Stop", systemImage: "stop.fill")
+                    .labelStyle(.iconOnly)
             }
-            .buttonStyle(.dads(.solidFill, size: .medium))
+            .buttonStyle(.dads(.solidFill, size: .icon))
             .accessibilityLabel(Text("Stop timer for \(item.displayTitle)"))
         } else {
             Button {
                 Task { await model.start(item.id) }
             } label: {
                 Label("Start", systemImage: "play.fill")
+                    .labelStyle(.iconOnly)
             }
-            .buttonStyle(.dads(.outline, size: .medium))
+            .buttonStyle(.dads(.outline, size: .icon))
             .accessibilityLabel(Text("Start timer for \(item.displayTitle)"))
         }
     }
 
-    /// The resource list's action button: 44 pt wide, as tall as the row.
+    /// The resource list's action button, 44 pt square.
     private var moreMenu: some View {
         Menu {
             Button("Rename", systemImage: "pencil") { onAction(.rename) }
-            if item.isDone {
-                Button("Reopen", systemImage: "arrow.uturn.backward") { onAction(.toggleDone) }
-            } else {
-                Button("Complete", systemImage: "checkmark") { onAction(.toggleDone) }
-            }
             Button("Delete", systemImage: "trash", role: .destructive) { onAction(.delete) }
         } label: {
             Image(systemName: "ellipsis")
@@ -108,5 +121,15 @@ struct TaskRow: View {
                 .contentShape(.rect)
         }
         .accessibilityLabel(Text("More for \(item.displayTitle)"))
+    }
+}
+
+/// The checkbox's 44 pt target, dimmed while pressed.
+private struct CheckboxButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .frame(width: 44, height: 44)
+            .contentShape(.rect)
+            .opacity(configuration.isPressed ? 0.5 : 1)
     }
 }
