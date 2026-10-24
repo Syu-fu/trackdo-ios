@@ -121,6 +121,12 @@ reads owned value types published by a `@MainActor` `@Observable` model.
   system font stands in for Noto Sans JP, and text sizes follow Dynamic Type.
   DADS defines only a light palette, so the app sets `UIUserInterfaceStyle`
   to `Light` for now.
+- The app is in English and Japanese. Strings live in String Catalogs
+  (`Localizable.xcstrings` and `InfoPlist.xcstrings`); the build extracts
+  them from the code, and `scripts/check-localizations.sh` fails when the
+  catalog is out of step or a string lacks a Japanese translation. Japanese
+  keeps the DADS markers "※必須" and "＊". Dates, times and spoken
+  durations follow the device's locale.
 - Screen logic that can be tested, such as `TaskListModel`,
   `TaskDetailModel` and `SettingsEditor`, lives in `TrackdoKit`; views only
   lay it out.

@@ -62,7 +62,7 @@ private extension SyncStatus {
         case .connecting: "Reaching the server and catching up with your other devices."
         case .live: "Changes sync with your other devices as you make them."
         case .paused: "Syncing resumes when you return to trackdo."
-        case .failing: ""
+        case .failing: "Your changes are kept on this device."
         }
     }
 }

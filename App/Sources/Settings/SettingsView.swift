@@ -83,9 +83,7 @@ struct SettingsView: View {
         DadsInputText(
             label: "Token",
             isRequired: !editor.hasSavedToken,
-            support: editor.hasSavedToken
-                ? "A token is saved. Leave this empty to keep it, or enter a new one."
-                : "One of the tokens set up on the server.",
+            support: tokenSupport,
             error: editor.tokenIssue?.message(tokenWasEmpty: tokenWasEmpty),
             isFocused: focus == .token
         ) {
@@ -96,6 +94,15 @@ struct SettingsView: View {
                 .focused($focus, equals: .token)
                 .onSubmit(save)
         }
+    }
+
+    /// Separate returns: string extraction missed the second literal when
+    /// this was a ternary.
+    private var tokenSupport: LocalizedStringResource {
+        if editor.hasSavedToken {
+            return "A token is saved. Leave this empty to keep it, or enter a new one."
+        }
+        return "One of the tokens set up on the server."
     }
 
     /// Stacked for mobile: the primary action first.

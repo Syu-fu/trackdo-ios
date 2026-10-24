@@ -58,3 +58,5 @@ jobs:
         run: cat target/test-server/server.log || true
       - name: Build the app for iOS Simulator
         run: scripts/build-app.sh -quiet
+      - name: Check localizations
+        run: scripts/check-localizations.sh

@@ -2,6 +2,7 @@
 name: Trackdo
 options:
   bundleIdPrefix: dev.syufu
+  developmentLanguage: en
   deploymentTarget:
     iOS: "26.0"
   createIntermediateGroups: true
@@ -13,6 +14,10 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     SWIFT_TREAT_WARNINGS_AS_ERRORS: true
+    # Strings come from the code into App/Sources/Localizable.xcstrings;
+    # scripts/check-localizations.sh keeps the catalog in step.
+    SWIFT_EMIT_LOC_STRINGS: true
+    LOCALIZATION_PREFERS_STRING_CATALOGS: true
     TARGETED_DEVICE_FAMILY: "1"
     # TrackdoFFIC has no Intel simulator slice.
     ARCHS: arm64

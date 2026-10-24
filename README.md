@@ -34,6 +34,7 @@ scripts/build-xcframework.sh   # Rust library and Swift bindings for TrackdoKit
 scripts/swift-coverage.sh      # the same tests, failing below 80% line coverage
 scripts/integration-test.sh    # TrackdoKit against a local trackdo-server
 scripts/build-app.sh           # the app for the iOS Simulator
+scripts/check-localizations.sh # after a build: string catalogs match the code, all translated
 ```
 
 Run the script again after changing `crates/trackdo-ffi`; its outputs are not

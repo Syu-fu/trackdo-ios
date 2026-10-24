@@ -1,0 +1,1325 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+      "shouldTranslate" : false
+    },
+    "%@ is deleted on every device. This can’t be undone." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@の記録は、すべての端末から削除されます。元に戻すことはできません。"
+          }
+        }
+      }
+    },
+    "%@ – now" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ – 現在"
+          }
+        }
+      }
+    },
+    "A token is saved. Leave this empty to keep it, or enter a new one." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トークンは保存済みです。そのまま使う場合は空欄のままにし、変える場合は新しいトークンを入力してください。"
+          }
+        }
+      }
+    },
+    "Add" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "追加"
+          }
+        }
+      }
+    },
+    "Add Past Entry" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "過去の記録を追加"
+          }
+        }
+      }
+    },
+    "Add Task" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクを追加"
+          }
+        }
+      }
+    },
+    "Add what you work on, then start its timer. Your tasks are kept on this device; set up Sync to see them on your other devices too." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取り組むことを追加して、タイマーを開始しましょう。タスクはこの端末に保存されます。ほかの端末でも使うには、同期を設定してください。"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンセル"
+          }
+        }
+      }
+    },
+    "Changes could not be saved on this device" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末に変更を保存できませんでした"
+          }
+        }
+      }
+    },
+    "Changes sync with your other devices as you make them." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更は、その都度ほかの端末と同期されます。"
+          }
+        }
+      }
+    },
+    "Check and Save" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "確認して保存"
+          }
+        }
+      }
+    },
+    "Check that the token is one the server accepts. Nothing was changed." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバが受け付けるトークンか確認してください。設定は変更されていません。"
+          }
+        }
+      }
+    },
+    "Check the address and your network connection, then try again. Nothing was changed." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アドレスとネットワーク接続を確認して、もう一度お試しください。設定は変更されていません。"
+          }
+        }
+      }
+    },
+    "Checking the server…" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバを確認しています…"
+          }
+        }
+      }
+    },
+    "Complete" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完了にする"
+          }
+        }
+      }
+    },
+    "Connecting…" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続しています…"
+          }
+        }
+      }
+    },
+    "Delete" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除"
+          }
+        }
+      }
+    },
+    "Delete Entry" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "記録を削除"
+          }
+        }
+      }
+    },
+    "Delete Task" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクを削除"
+          }
+        }
+      }
+    },
+    "Delete this task?" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このタスクを削除しますか？"
+          }
+        }
+      }
+    },
+    "Delete this time entry?" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この記録を削除しますか？"
+          }
+        }
+      }
+    },
+    "Discard Changes" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更を破棄"
+          }
+        }
+      }
+    },
+    "Discard your changes?" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更を破棄しますか？"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完了"
+          }
+        }
+      }
+    },
+    "Duration" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "時間"
+          }
+        }
+      }
+    },
+    "Edit Times" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "時刻を編集"
+          }
+        }
+      }
+    },
+    "Edits from two devices left an entry ending before it starts. Edit the entry marked Needs Fixing." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2台の端末での編集が重なり、終了が開始より前になった記録があります。「要修正」の付いた記録の時刻を直してください。"
+          }
+        }
+      }
+    },
+    "End" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "終了"
+          }
+        }
+      }
+    },
+    "Enter a title." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タイトルを入力してください。"
+          }
+        }
+      }
+    },
+    "Enter a token the server accepts below. Your changes are kept until then." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバが受け付けるトークンを下の欄に入力してください。それまでの変更は保持されます。"
+          }
+        }
+      }
+    },
+    "Enter the full address, starting with https://." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https:// から始まるアドレスをすべて入力してください。"
+          }
+        }
+      }
+    },
+    "Enter the token that the server accepts." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバが受け付けるトークンを入力してください。"
+          }
+        }
+      }
+    },
+    "Enter the token without spaces or line breaks." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空白や改行を含めずにトークンを入力してください。"
+          }
+        }
+      }
+    },
+    "Error" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エラー"
+          }
+        }
+      }
+    },
+    "For example https://sync.example.com. http:// works only for a server on this device or your local network." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "例：https://sync.example.com　http:// は、この端末かローカルネットワーク上のサーバでのみ使えます。"
+          }
+        }
+      }
+    },
+    "Free up storage on this device. trackdo saves again with your next change. (%@)" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末の空き容量を増やしてください。次に変更したときに、もう一度保存します。（%@）"
+          }
+        }
+      }
+    },
+    "From %@ to %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "From %1$@ to %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@から%2$@まで"
+          }
+        }
+      }
+    },
+    "From %@, still running" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@から計測中"
+          }
+        }
+      }
+    },
+    "Information" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お知らせ"
+          }
+        }
+      }
+    },
+    "It may have been deleted on another device. Go back to see your tasks." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ほかの端末で削除された可能性があります。前の画面に戻ってタスクを確認してください。"
+          }
+        }
+      }
+    },
+    "Keep Editing" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編集を続ける"
+          }
+        }
+      }
+    },
+    "Keep the title on one line." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タイトルは1行で入力してください。"
+          }
+        }
+      }
+    },
+    "More for %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@のその他の操作"
+          }
+        }
+      }
+    },
+    "Needs Fixing" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要修正"
+          }
+        }
+      }
+    },
+    "New Task" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新規タスク"
+          }
+        }
+      }
+    },
+    "No tasks yet" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクはまだありません"
+          }
+        }
+      }
+    },
+    "No time recorded yet. Start the timer from the task list, or add work you did earlier." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "まだ記録がありません。タスク一覧からタイマーを開始するか、過去の作業を追加してください。"
+          }
+        }
+      }
+    },
+    "Not syncing" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同期していません"
+          }
+        }
+      }
+    },
+    "One line, for example Write the weekly report." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1行で入力してください。例：週報を書く"
+          }
+        }
+      }
+    },
+    "One of the tokens set up on the server." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバに設定したトークンのひとつを入力してください。"
+          }
+        }
+      }
+    },
+    "Optional. trackdo works on this device without a server. To use your tasks on other devices too, connect them all to your trackdo-server." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "任意の設定です。trackdo はサーバがなくてもこの端末で使えます。ほかの端末でもタスクを使うには、すべての端末をあなたの trackdo-server に接続してください。"
+          }
+        }
+      }
+    },
+    "Paused" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一時停止中"
+          }
+        }
+      }
+    },
+    "Reaching the server and catching up with your other devices." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバに接続し、ほかの端末での変更を取り込んでいます。"
+          }
+        }
+      }
+    },
+    "Remove Token" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トークンを削除"
+          }
+        }
+      }
+    },
+    "Remove the part from ? or # onward." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "? または # 以降を削除してください。"
+          }
+        }
+      }
+    },
+    "Remove the token?" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トークンを削除しますか？"
+          }
+        }
+      }
+    },
+    "Remove the user name and password from the address." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アドレスからユーザー名とパスワードを削除してください。"
+          }
+        }
+      }
+    },
+    "Rename" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名前を変更"
+          }
+        }
+      }
+    },
+    "Rename Task" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスク名を変更"
+          }
+        }
+      }
+    },
+    "Reopen" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未完了に戻す"
+          }
+        }
+      }
+    },
+    "Required" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "必須"
+          }
+        }
+      }
+    },
+    "Retry Now" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今すぐ再試行"
+          }
+        }
+      }
+    },
+    "Running" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "計測中"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
+    },
+    "Saved" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存しました"
+          }
+        }
+      }
+    },
+    "Server URL" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバのURL"
+          }
+        }
+      }
+    },
+    "Set the end after the start." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "終了は開始より後にしてください。"
+          }
+        }
+      }
+    },
+    "Set times that are not later than now." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在より後の時刻にはできません。"
+          }
+        }
+      }
+    },
+    "Shorten the title to %lld characters or fewer." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タイトルを%lld文字以内にしてください。"
+          }
+        }
+      }
+    },
+    "Shows its time entries." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "記録を表示します。"
+          }
+        }
+      }
+    },
+    "Some times need fixing" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直す必要のある記録があります"
+          }
+        }
+      }
+    },
+    "Something answered at this address, but not as trackdo-server does. Check the address." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このアドレスから応答がありましたが、trackdo-server の応答ではありません。アドレスを確認してください。"
+          }
+        }
+      }
+    },
+    "Start" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開始"
+          }
+        }
+      }
+    },
+    "Start the address with https://." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アドレスは https:// から始めてください。"
+          }
+        }
+      }
+    },
+    "Start time not received yet" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開始時刻をまだ受信していません"
+          }
+        }
+      }
+    },
+    "Start timer for %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@のタイマーを開始"
+          }
+        }
+      }
+    },
+    "Status" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "状態"
+          }
+        }
+      }
+    },
+    "Still running. Stop the timer to set the end." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "計測中です。終了時刻は、タイマーを停止すると決まります。"
+          }
+        }
+      }
+    },
+    "Stop" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "停止"
+          }
+        }
+      }
+    },
+    "Stop timer for %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@のタイマーを停止"
+          }
+        }
+      }
+    },
+    "Stopped Automatically" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動停止"
+          }
+        }
+      }
+    },
+    "Success" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "成功"
+          }
+        }
+      }
+    },
+    "Sync" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同期"
+          }
+        }
+      }
+    },
+    "Sync Settings" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同期の設定"
+          }
+        }
+      }
+    },
+    "Sync server" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同期サーバ"
+          }
+        }
+      }
+    },
+    "Syncing resumes when you return to trackdo." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "trackdo に戻ると同期を再開します。"
+          }
+        }
+      }
+    },
+    "Syncing stops until you enter a token again. Your edits stay on this device." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トークンを入力し直すまで同期は止まります。編集した内容はこの端末に残ります。"
+          }
+        }
+      }
+    },
+    "Tasks" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスク"
+          }
+        }
+      }
+    },
+    "The app and the server are not compatible" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリとサーバのバージョンが合っていません"
+          }
+        }
+      }
+    },
+    "The change could not be saved" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更を保存できませんでした"
+          }
+        }
+      }
+    },
+    "The list now shows the current tasks." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一覧を最新の状態に更新しました。"
+          }
+        }
+      }
+    },
+    "The server answered unexpectedly" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバから予期しない応答がありました"
+          }
+        }
+      }
+    },
+    "The server answered with error %lld. Try again later. Nothing was changed." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバがエラー %lld を返しました。しばらくしてからもう一度お試しください。設定は変更されていません。"
+          }
+        }
+      }
+    },
+    "The server can’t be reached" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバに接続できません"
+          }
+        }
+      }
+    },
+    "The server could not be reached" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバに接続できませんでした"
+          }
+        }
+      }
+    },
+    "The server failed" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバでエラーが発生しました"
+          }
+        }
+      }
+    },
+    "The server refused the token" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバがトークンを受け付けませんでした"
+          }
+        }
+      }
+    },
+    "The server sent conflicting data" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバから矛盾したデータが届きました"
+          }
+        }
+      }
+    },
+    "The settings could not be saved" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定を保存できませんでした"
+          }
+        }
+      }
+    },
+    "The task was deleted on another device" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクはほかの端末で削除されました"
+          }
+        }
+      }
+    },
+    "This is not a trackdo server" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "trackdo のサーバではありません"
+          }
+        }
+      }
+    },
+    "This task was deleted" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このタスクは削除されました"
+          }
+        }
+      }
+    },
+    "Time Entries" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "記録"
+          }
+        }
+      }
+    },
+    "Timer running" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "計測中"
+          }
+        }
+      }
+    },
+    "Title" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タイトル"
+          }
+        }
+      }
+    },
+    "To Do" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未完了"
+          }
+        }
+      }
+    },
+    "To do" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未完了"
+          }
+        }
+      }
+    },
+    "Token" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "トークン"
+          }
+        }
+      }
+    },
+    "Total" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合計"
+          }
+        }
+      }
+    },
+    "Total %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合計 %@"
+          }
+        }
+      }
+    },
+    "Try again. If this keeps happening, restart the app. (%@)" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "もう一度お試しください。繰り返し起きる場合は、アプリを再起動してください。（%@）"
+          }
+        }
+      }
+    },
+    "Try again. If this keeps happening, restart the device. (%@)" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "もう一度お試しください。繰り返し起きる場合は、端末を再起動してください。（%@）"
+          }
+        }
+      }
+    },
+    "Untitled task" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無題のタスク"
+          }
+        }
+      }
+    },
+    "Up to date" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最新の状態です"
+          }
+        }
+      }
+    },
+    "Update the app or the server so that both use the same sync protocol. Nothing was changed." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリかサーバを更新して、同じ同期プロトコルを使うようにしてください。設定は変更されていません。"
+          }
+        }
+      }
+    },
+    "Update the app or the server so that both use the same sync protocol. Your changes are kept until then." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリかサーバを更新して、同じ同期プロトコルを使うようにしてください。それまでの変更は保持されます。"
+          }
+        }
+      }
+    },
+    "Use https:// unless the server runs on this device or your local network." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この端末かローカルネットワーク上のサーバでない場合は、https:// を使ってください。"
+          }
+        }
+      }
+    },
+    "Warning" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "警告"
+          }
+        }
+      }
+    },
+    "When the work began." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作業を始めた日時です。"
+          }
+        }
+      }
+    },
+    "When the work ended, after the start and not later than now." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作業を終えた日時です。開始より後で、現在以前にしてください。"
+          }
+        }
+      }
+    },
+    "Your changes are kept on this device and sent when the connection is back." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更はこの端末に保持され、接続が戻ると送信されます。"
+          }
+        }
+      }
+    },
+    "Your changes are kept on this device." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "変更はこの端末に保持されます。"
+          }
+        }
+      }
+    },
+    "Your data was left as it is. Restart the app; if this keeps happening, report it with this detail: %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "データはそのまま残っています。アプリを再起動してください。繰り返し起きる場合は、次の詳細を添えて報告してください：%@"
+          }
+        }
+      }
+    },
+    "Your edits now sync through %@." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ を通じて同期するようになりました。"
+          }
+        }
+      }
+    },
+    "Your tasks are kept on this device only." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクはこの端末にだけ保存されています。"
+          }
+        }
+      }
+    },
+    "trackdo could not open your data" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "trackdo がデータを開けませんでした"
+          }
+        }
+      }
+    },
+    "trackdo keeps trying, and your changes are kept. (%@)" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "trackdo は再試行を続けます。変更は保持されます。（%@）"
+          }
+        }
+      }
+    },
+    "trackdo keeps trying. If this keeps happening, report it to whoever runs the server. (%@)" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "trackdo は再試行を続けます。繰り返し起きる場合は、サーバの管理者に報告してください。（%@）"
+          }
+        }
+      }
+    },
+    "“%@” and its time entries are deleted on every device. This can’t be undone." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」とその記録は、すべての端末から削除されます。元に戻すことはできません。"
+          }
+        }
+      }
+    },
+    "※Required" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "※必須"
+          }
+        }
+      }
+    },
+    "＊%@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "＊%@"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
