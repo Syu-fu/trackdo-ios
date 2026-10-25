@@ -17,7 +17,7 @@ use crate::env::{SystemClock, UuidV7};
 
 pub use crate::core::{EventOutcome, PushOutcome, SnapshotOutcome};
 pub use error::FfiError;
-pub use views::{EntryRecord, TaskRecord};
+pub use views::{CalendarDate, EntryRecord, Priority, TagRecord, TaskRecord};
 
 uniffi::setup_scaffolding!();
 
@@ -72,9 +72,60 @@ impl TrackdoCore {
         self.lock().reopen(&task_id)
     }
 
-    /// Also stops the task's running timer.
+    /// Also deletes every task below it and stops their running timers.
     pub fn delete(&self, task_id: String) -> Result<(), FfiError> {
         self.lock().delete(&task_id)
+    }
+
+    pub fn set_priority(&self, task_id: String, priority: Priority) -> Result<(), FfiError> {
+        self.lock().set_priority(&task_id, priority)
+    }
+
+    /// An empty or whitespace-only note removes the note.
+    pub fn set_note(&self, task_id: String, note: String) -> Result<(), FfiError> {
+        self.lock().set_note(&task_id, &note)
+    }
+
+    /// `None` clears the due date.
+    pub fn set_due(&self, task_id: String, due: Option<CalendarDate>) -> Result<(), FfiError> {
+        self.lock().set_due(&task_id, due)
+    }
+
+    /// Plans the task for a time, which may be past; `None` unschedules it.
+    pub fn schedule(&self, task_id: String, at_ms: Option<u64>) -> Result<(), FfiError> {
+        self.lock().schedule(&task_id, at_ms)
+    }
+
+    /// Moves the task under another, or to the top level for `None`.
+    pub fn set_parent(&self, task_id: String, parent_id: Option<String>) -> Result<(), FfiError> {
+        self.lock().set_parent(&task_id, parent_id.as_deref())
+    }
+
+    /// Returns the new task's id.
+    pub fn create_subtask(&self, parent_id: String, title: String) -> Result<String, FfiError> {
+        self.lock().create_subtask(&parent_id, &title)
+    }
+
+    /// Returns the new tag's id, or that of the tag already named so.
+    pub fn create_tag(&self, name: String) -> Result<String, FfiError> {
+        self.lock().create_tag(&name)
+    }
+
+    pub fn rename_tag(&self, tag_id: String, name: String) -> Result<(), FfiError> {
+        self.lock().rename_tag(&tag_id, &name)
+    }
+
+    /// The tag disappears from every task.
+    pub fn delete_tag(&self, tag_id: String) -> Result<(), FfiError> {
+        self.lock().delete_tag(&tag_id)
+    }
+
+    pub fn tag_task(&self, task_id: String, tag_id: String) -> Result<(), FfiError> {
+        self.lock().tag_task(&task_id, &tag_id)
+    }
+
+    pub fn untag_task(&self, task_id: String, tag_id: String) -> Result<(), FfiError> {
+        self.lock().untag_task(&task_id, &tag_id)
     }
 
     /// Starts a timer, stopping any other one; reopens a done task. Returns
@@ -116,6 +167,11 @@ impl TrackdoCore {
     /// Tasks that are not deleted, oldest first.
     pub fn tasks(&self) -> Vec<TaskRecord> {
         self.lock().tasks()
+    }
+
+    /// Tags that are not deleted, by name.
+    pub fn tags(&self) -> Vec<TagRecord> {
+        self.lock().tags()
     }
 
     pub fn running_entry(&self) -> Option<EntryRecord> {
@@ -234,6 +290,50 @@ mod tests {
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].id, past);
         assert!(core.tasks().is_empty());
+    }
+
+    #[test]
+    fn every_planning_command_reaches_the_replica() {
+        let core = TrackdoCore::new();
+        let task = core.create("a".to_owned()).unwrap();
+        let other = core.create("b".to_owned()).unwrap();
+        let due = CalendarDate {
+            year: 2026,
+            month: 10,
+            day: 31,
+        };
+
+        core.set_priority(task.clone(), Priority::Low).unwrap();
+        core.set_note(task.clone(), "n".to_owned()).unwrap();
+        core.set_due(task.clone(), Some(due)).unwrap();
+        core.schedule(task.clone(), Some(1)).unwrap();
+        core.set_parent(other.clone(), Some(task.clone())).unwrap();
+        let sub = core.create_subtask(task.clone(), "c".to_owned()).unwrap();
+        let tag = core.create_tag("t".to_owned()).unwrap();
+        core.rename_tag(tag.clone(), "u".to_owned()).unwrap();
+        core.tag_task(task.clone(), tag.clone()).unwrap();
+        let listed = core.tasks();
+        core.untag_task(task.clone(), tag.clone()).unwrap();
+        let tags = core.tags();
+        core.delete_tag(tag).unwrap();
+
+        let parent_of = |id: &str| {
+            listed
+                .iter()
+                .find(|t| t.id == id)
+                .unwrap()
+                .parent_id
+                .clone()
+        };
+        assert_eq!(listed[0].priority, Priority::Low);
+        assert_eq!(listed[0].note.as_deref(), Some("n"));
+        assert_eq!(listed[0].due, Some(due));
+        assert_eq!(listed[0].scheduled_at_ms, Some(1));
+        assert_eq!(listed[0].tags[0].name, "u");
+        assert_eq!(parent_of(&other), Some(task.clone()));
+        assert_eq!(parent_of(&sub), Some(task));
+        assert_eq!(tags.len(), 1);
+        assert!(core.tags().is_empty());
     }
 
     #[test]

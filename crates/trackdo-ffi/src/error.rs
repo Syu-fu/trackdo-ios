@@ -1,6 +1,7 @@
 //! Errors raised across the FFI.
 
 use thiserror::Error;
+use trackdo_core::date::DateError;
 use trackdo_core::hlc::HlcError;
 use trackdo_core::note::NoteError;
 use trackdo_core::replica::CommandError;
@@ -24,6 +25,8 @@ pub enum FfiError {
     TitleTooLong { max: u64, actual: u64 },
     #[error("note must be at most {max} characters, got {actual}")]
     NoteTooLong { max: u64, actual: u64 },
+    #[error("{year:04}-{month:02}-{day:02} is not a valid date")]
+    InvalidDate { year: u16, month: u8, day: u8 },
     #[error("task {id} does not exist")]
     TaskNotFound { id: String },
     #[error("task {id} is deleted")]
@@ -125,6 +128,12 @@ impl From<TitleError> for FfiError {
                 actual: count(actual),
             },
         }
+    }
+}
+
+impl From<DateError> for FfiError {
+    fn from(DateError { year, month, day }: DateError) -> Self {
+        Self::InvalidDate { year, month, day }
     }
 }
 

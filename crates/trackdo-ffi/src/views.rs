@@ -2,7 +2,9 @@
 
 use std::time::Duration;
 
-use trackdo_core::task::{Task, TaskStatus};
+use trackdo_core::date::Date;
+use trackdo_core::tag::Tag;
+use trackdo_core::task::{Task, TaskId, TaskPriority, TaskStatus};
 use trackdo_core::time_entry::Timestamp;
 use trackdo_core::tracking::TimeEntryView;
 
@@ -19,17 +21,109 @@ pub struct TaskRecord {
     pub is_in_progress: bool,
     /// Time spent on the task, counting a running timer up to now.
     pub total_ms: u64,
+    pub priority: Priority,
+    /// `None` while the task has no note.
+    pub note: Option<String>,
+    pub due: Option<CalendarDate>,
+    pub scheduled_at_ms: Option<u64>,
+    /// The parent in effect, which may differ from the one written when
+    /// concurrent moves made a cycle; `None` at the top level.
+    pub parent_id: Option<String>,
+    /// Tags on the task that are not deleted, by name.
+    pub tags: Vec<TagRecord>,
+}
+
+/// Where a task sits and what it carries beyond its own fields.
+pub(crate) struct TaskContext {
+    pub(crate) parent: Option<TaskId>,
+    pub(crate) tags: Vec<TagRecord>,
+    pub(crate) is_in_progress: bool,
+    pub(crate) total: Duration,
 }
 
 impl TaskRecord {
-    pub(crate) fn new(task: &Task, is_in_progress: bool, total: Duration) -> Self {
+    pub(crate) fn new(task: &Task, context: TaskContext) -> Self {
         Self {
             id: ids::encode(task.id().0),
             title: task.title().map(|title| title.as_str().to_owned()),
             is_done: task.status() == TaskStatus::Done,
-            is_in_progress,
-            total_ms: millis(total),
+            is_in_progress: context.is_in_progress,
+            total_ms: millis(context.total),
+            priority: task.priority().into(),
+            note: task.note().map(|note| note.as_str().to_owned()),
+            due: task.due().map(CalendarDate::from),
+            scheduled_at_ms: task.scheduled_at().map(|Timestamp(at)| at),
+            parent_id: context.parent.map(|parent| ids::encode(parent.0)),
+            tags: context.tags,
         }
+    }
+}
+
+/// Ordered from least to most urgent.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum Priority {
+    None,
+    Low,
+    Medium,
+    High,
+}
+
+impl From<TaskPriority> for Priority {
+    fn from(priority: TaskPriority) -> Self {
+        match priority {
+            TaskPriority::None => Self::None,
+            TaskPriority::Low => Self::Low,
+            TaskPriority::Medium => Self::Medium,
+            TaskPriority::High => Self::High,
+        }
+    }
+}
+
+impl From<Priority> for TaskPriority {
+    fn from(priority: Priority) -> Self {
+        match priority {
+            Priority::None => Self::None,
+            Priority::Low => Self::Low,
+            Priority::Medium => Self::Medium,
+            Priority::High => Self::High,
+        }
+    }
+}
+
+/// A day without a time zone, so a due date stays on the same day wherever
+/// the device is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Record)]
+pub struct CalendarDate {
+    pub year: u16,
+    pub month: u8,
+    pub day: u8,
+}
+
+impl From<Date> for CalendarDate {
+    fn from(date: Date) -> Self {
+        Self {
+            year: date.year(),
+            month: date.month(),
+            day: date.day(),
+        }
+    }
+}
+
+/// A tag that is not deleted and whose name has been received.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct TagRecord {
+    pub id: String,
+    pub name: String,
+}
+
+impl TagRecord {
+    /// `None` for a deleted tag or one whose name has not arrived yet.
+    pub(crate) fn new(tag: &Tag) -> Option<Self> {
+        let name = tag.name().filter(|_| !tag.is_deleted())?;
+        Some(Self {
+            id: ids::encode(tag.id().0),
+            name: name.as_str().to_owned(),
+        })
     }
 }
 
@@ -77,8 +171,10 @@ fn millis(duration: Duration) -> u64 {
 mod tests {
     use trackdo_core::env::Clock;
     use trackdo_core::hlc::{DeviceId, Hlc};
+    use trackdo_core::note::Note;
     use trackdo_core::replica::Replica;
-    use trackdo_core::task::{TaskChange, TaskId};
+    use trackdo_core::tag::{TagChange, TagId, TagName};
+    use trackdo_core::task::TaskChange;
     use trackdo_core::title::Title;
 
     use super::*;
@@ -101,7 +197,14 @@ mod tests {
             TaskChange::Status(TaskStatus::Done),
         );
 
-        let view = TaskRecord::new(&task, true, Duration::from_millis(1_500));
+        let view = TaskRecord::new(
+            &task,
+            TaskContext {
+                is_in_progress: true,
+                total: Duration::from_millis(1_500),
+                ..context()
+            },
+        );
 
         assert_eq!(
             view,
@@ -111,16 +214,101 @@ mod tests {
                 is_done: true,
                 is_in_progress: true,
                 total_ms: 1_500,
+                priority: Priority::None,
+                note: None,
+                due: None,
+                scheduled_at_ms: None,
+                parent_id: None,
+                tags: Vec::new(),
             }
         );
     }
 
     #[test]
     fn task_view_of_untitled_task_has_no_title() {
-        let view = TaskRecord::new(&Task::empty(TASK), false, Duration::ZERO);
+        let view = TaskRecord::new(&Task::empty(TASK), context());
 
         assert_eq!(view.title, None);
         assert!(!view.is_done);
+    }
+
+    #[test]
+    fn task_view_carries_planning_fields() {
+        let changes = [
+            TaskChange::Priority(TaskPriority::High),
+            TaskChange::Note(Note::new("call first").unwrap()),
+            TaskChange::Due(Some(Date::new(2026, 10, 31).unwrap())),
+            TaskChange::ScheduledAt(Some(Timestamp(NOW))),
+        ];
+        let task = changes.into_iter().fold(Task::empty(TASK), written);
+        let tag = TagRecord {
+            id: ids::encode(9),
+            name: "home".to_owned(),
+        };
+
+        let view = TaskRecord::new(
+            &task,
+            TaskContext {
+                parent: Some(TaskId(8)),
+                tags: vec![tag.clone()],
+                ..context()
+            },
+        );
+
+        assert_eq!(view.priority, Priority::High);
+        assert_eq!(view.note.as_deref(), Some("call first"));
+        assert_eq!(
+            view.due,
+            Some(CalendarDate {
+                year: 2026,
+                month: 10,
+                day: 31
+            })
+        );
+        assert_eq!(view.scheduled_at_ms, Some(NOW));
+        assert_eq!(view.parent_id, Some(ids::encode(8)));
+        assert_eq!(view.tags, [tag]);
+    }
+
+    #[test]
+    fn priorities_convert_both_ways() {
+        let pairs = [
+            (TaskPriority::None, Priority::None),
+            (TaskPriority::Low, Priority::Low),
+            (TaskPriority::Medium, Priority::Medium),
+            (TaskPriority::High, Priority::High),
+        ];
+        for (core, ffi) in pairs {
+            assert_eq!(Priority::from(core), ffi);
+            assert_eq!(TaskPriority::from(ffi), core);
+        }
+    }
+
+    #[test]
+    fn tag_view_needs_a_name_and_a_live_tag() {
+        let hlc = Hlc::new(1_000, 0, DEVICE);
+        let named =
+            Tag::empty(TagId(9)).apply(&TagChange::Name(TagName::new("home").unwrap()), hlc);
+        let deleted = named.apply(&TagChange::Deleted(true), Hlc::new(2_000, 0, DEVICE));
+
+        assert_eq!(
+            TagRecord::new(&named),
+            Some(TagRecord {
+                id: ids::encode(9),
+                name: "home".to_owned()
+            })
+        );
+        assert_eq!(TagRecord::new(&Tag::empty(TagId(9))), None);
+        assert_eq!(TagRecord::new(&deleted), None);
+    }
+
+    fn context() -> TaskContext {
+        TaskContext {
+            parent: None,
+            tags: Vec::new(),
+            is_in_progress: false,
+            total: Duration::ZERO,
+        }
     }
 
     #[test]

@@ -8,15 +8,19 @@ mod state;
 pub use push::PushOutcome;
 pub use remote::{EventOutcome, SnapshotOutcome};
 
+use trackdo_core::date::Date;
 use trackdo_core::env::{Clock, IdGen};
+use trackdo_core::hierarchy::Hierarchy;
 use trackdo_core::hlc::DeviceId;
 use trackdo_core::replica::Replica;
+use trackdo_core::tag::TagId;
 use trackdo_core::task::{Task, TaskId};
 use trackdo_core::time_entry::{TimeEntryId, Timestamp};
+use trackdo_core::title::Title;
 
 use crate::error::FfiError;
 use crate::ids;
-use crate::views::{EntryRecord, TaskRecord};
+use crate::views::{CalendarDate, EntryRecord, Priority, TagRecord, TaskContext, TaskRecord};
 
 /// A replica plus the clock that dates its queries.
 pub(crate) struct Core<C, G> {
@@ -51,6 +55,93 @@ impl<C: Clock + Clone, G: IdGen> Core<C, G> {
 
     pub(crate) fn delete(&mut self, task_id: &str) -> Result<(), FfiError> {
         Ok(self.replica.delete(task(task_id)?)?)
+    }
+
+    pub(crate) fn set_priority(
+        &mut self,
+        task_id: &str,
+        priority: Priority,
+    ) -> Result<(), FfiError> {
+        Ok(self.replica.set_priority(task(task_id)?, priority.into())?)
+    }
+
+    pub(crate) fn set_note(&mut self, task_id: &str, note: &str) -> Result<(), FfiError> {
+        Ok(self.replica.set_note(task(task_id)?, note)?)
+    }
+
+    pub(crate) fn set_due(
+        &mut self,
+        task_id: &str,
+        due: Option<CalendarDate>,
+    ) -> Result<(), FfiError> {
+        let due = due.map(date).transpose()?;
+        Ok(self.replica.set_due(task(task_id)?, due)?)
+    }
+
+    pub(crate) fn schedule(&mut self, task_id: &str, at_ms: Option<u64>) -> Result<(), FfiError> {
+        Ok(self
+            .replica
+            .schedule(task(task_id)?, at_ms.map(Timestamp))?)
+    }
+
+    pub(crate) fn set_parent(
+        &mut self,
+        task_id: &str,
+        parent_id: Option<&str>,
+    ) -> Result<(), FfiError> {
+        let parent = parent_id.map(task).transpose()?;
+        Ok(self.replica.set_parent(task(task_id)?, parent)?)
+    }
+
+    /// Checks the title and the parent before creating, so a refused
+    /// parent leaves no stray task.
+    pub(crate) fn create_subtask(
+        &mut self,
+        parent_id: &str,
+        title: &str,
+    ) -> Result<String, FfiError> {
+        let parent = task(parent_id)?;
+        Title::new(title)?;
+        if self.replica.task(parent).is_none() {
+            return Err(FfiError::TaskNotFound {
+                id: parent_id.to_owned(),
+            });
+        }
+        if self.replica.hierarchy().is_deleted(parent) {
+            return Err(FfiError::TaskDeleted {
+                id: parent_id.to_owned(),
+            });
+        }
+        let id = self.replica.create(title)?;
+        self.replica.set_parent(id, Some(parent))?;
+        Ok(ids::encode(id.0))
+    }
+
+    /// Returns the id of the tag already named so, if any.
+    pub(crate) fn create_tag(&mut self, name: &str) -> Result<String, FfiError> {
+        let id = self.replica.create_tag(name)?;
+        Ok(ids::encode(id.0))
+    }
+
+    pub(crate) fn rename_tag(&mut self, tag_id: &str, name: &str) -> Result<(), FfiError> {
+        Ok(self.replica.rename_tag(tag(tag_id)?, name)?)
+    }
+
+    pub(crate) fn delete_tag(&mut self, tag_id: &str) -> Result<(), FfiError> {
+        Ok(self.replica.delete_tag(tag(tag_id)?)?)
+    }
+
+    pub(crate) fn tag_task(&mut self, task_id: &str, tag_id: &str) -> Result<(), FfiError> {
+        Ok(self.replica.tag_task(task(task_id)?, tag(tag_id)?)?)
+    }
+
+    pub(crate) fn untag_task(&mut self, task_id: &str, tag_id: &str) -> Result<(), FfiError> {
+        Ok(self.replica.untag_task(task(task_id)?, tag(tag_id)?)?)
+    }
+
+    /// Tags that are not deleted, by name.
+    pub(crate) fn tags(&self) -> Vec<TagRecord> {
+        by_name(self.replica.tags().filter_map(TagRecord::new).collect())
     }
 
     pub(crate) fn start(&mut self, task_id: &str) -> Result<String, FfiError> {
@@ -101,7 +192,7 @@ impl<C: Clock + Clone, G: IdGen> Core<C, G> {
         self.replica
             .tasks()
             .filter(|task| !hierarchy.is_deleted(task.id()))
-            .map(|task| self.task_record(task, now))
+            .map(|task| self.task_record(task, &hierarchy, now))
             .collect()
     }
 
@@ -123,11 +214,21 @@ impl<C: Clock + Clone, G: IdGen> Core<C, G> {
             .collect())
     }
 
-    fn task_record(&self, task: &Task, now: Timestamp) -> TaskRecord {
+    fn task_record(&self, task: &Task, hierarchy: &Hierarchy, now: Timestamp) -> TaskRecord {
+        let id = task.id();
+        let tags = self
+            .replica
+            .tags_of(id)
+            .into_iter()
+            .filter_map(TagRecord::new);
         TaskRecord::new(
             task,
-            self.replica.is_in_progress(task.id()),
-            self.replica.task_total(task.id(), now),
+            TaskContext {
+                parent: hierarchy.parent(id),
+                tags: by_name(tags.collect()),
+                is_in_progress: self.replica.is_in_progress(id),
+                total: self.replica.task_total(id, now),
+            },
         )
     }
 
@@ -142,6 +243,19 @@ fn task(id: &str) -> Result<TaskId, FfiError> {
 
 fn entry(id: &str) -> Result<TimeEntryId, FfiError> {
     ids::decode(id).map(TimeEntryId)
+}
+
+fn tag(id: &str) -> Result<TagId, FfiError> {
+    ids::decode(id).map(TagId)
+}
+
+fn date(date: CalendarDate) -> Result<Date, FfiError> {
+    Ok(Date::new(date.year, date.month, date.day)?)
+}
+
+fn by_name(mut tags: Vec<TagRecord>) -> Vec<TagRecord> {
+    tags.sort_by(|a, b| a.name.cmp(&b.name).then_with(|| a.id.cmp(&b.id)));
+    tags
 }
 
 #[cfg(test)]
@@ -236,6 +350,148 @@ pub(crate) mod tests {
         core.delete(&parent).unwrap();
 
         assert!(core.tasks().is_empty());
+    }
+
+    #[test]
+    fn planning_fields_can_be_set_and_cleared() {
+        let (mut core, _) = core();
+        let id = core.create("a").unwrap();
+        let due = CalendarDate {
+            year: 2026,
+            month: 10,
+            day: 31,
+        };
+
+        core.set_priority(&id, Priority::High).unwrap();
+        core.set_note(&id, "call first\n").unwrap();
+        core.set_due(&id, Some(due)).unwrap();
+        core.schedule(&id, Some(NOW + 60_000)).unwrap();
+        let planned = core.tasks()[0].clone();
+        core.set_note(&id, "  ").unwrap();
+        core.set_due(&id, None).unwrap();
+        core.schedule(&id, None).unwrap();
+        let cleared = core.tasks()[0].clone();
+
+        assert_eq!(planned.priority, Priority::High);
+        assert_eq!(planned.note.as_deref(), Some("call first"));
+        assert_eq!(planned.due, Some(due));
+        assert_eq!(planned.scheduled_at_ms, Some(NOW + 60_000));
+        assert_eq!(cleared.note, None);
+        assert_eq!(cleared.due, None);
+        assert_eq!(cleared.scheduled_at_ms, None);
+    }
+
+    #[test]
+    fn invalid_due_dates_are_rejected() {
+        let (mut core, _) = core();
+        let id = core.create("a").unwrap();
+        let february_30 = CalendarDate {
+            year: 2026,
+            month: 2,
+            day: 30,
+        };
+
+        assert_eq!(
+            core.set_due(&id, Some(february_30)),
+            Err(FfiError::InvalidDate {
+                year: 2026,
+                month: 2,
+                day: 30
+            })
+        );
+    }
+
+    #[test]
+    fn subtasks_are_listed_with_their_parent() {
+        let (mut core, _) = core();
+        let parent = core.create("project").unwrap();
+        let moved = core.create("moved").unwrap();
+
+        let child = core.create_subtask(&parent, "step").unwrap();
+        core.set_parent(&moved, Some(&child)).unwrap();
+        let nested = core.tasks();
+        core.set_parent(&moved, None).unwrap();
+
+        let parent_of = |tasks: &[TaskRecord], id: &str| {
+            tasks
+                .iter()
+                .find(|task| task.id == id)
+                .unwrap()
+                .parent_id
+                .clone()
+        };
+        assert_eq!(parent_of(&nested, &child), Some(parent.clone()));
+        assert_eq!(parent_of(&nested, &moved), Some(child.clone()));
+        assert_eq!(parent_of(&core.tasks(), &moved), None);
+        assert_eq!(
+            core.set_parent(&parent, Some(&child)),
+            Err(FfiError::Cycle {
+                task_id: parent,
+                parent_id: child
+            })
+        );
+    }
+
+    #[test]
+    fn subtask_of_a_missing_parent_is_not_created() {
+        let (mut core, _) = core();
+        let unknown = ids::encode(42);
+        let parent = core.create("project").unwrap();
+        core.delete(&parent).unwrap();
+
+        assert_eq!(
+            core.create_subtask(&unknown, "step"),
+            Err(FfiError::TaskNotFound {
+                id: unknown.clone()
+            })
+        );
+        assert_eq!(
+            core.create_subtask(&parent, "step"),
+            Err(FfiError::TaskDeleted { id: parent })
+        );
+        assert_eq!(
+            core.create_subtask(&unknown, " "),
+            Err(FfiError::EmptyTitle)
+        );
+        assert!(core.tasks().is_empty());
+    }
+
+    #[test]
+    fn tags_are_created_attached_renamed_and_deleted() {
+        let (mut core, _) = core();
+        let task = core.create("a").unwrap();
+        let work = core.create_tag("work").unwrap();
+        let home = core.create_tag("home").unwrap();
+
+        core.tag_task(&task, &work).unwrap();
+        core.tag_task(&task, &home).unwrap();
+        let tagged = core.tasks()[0].tags.clone();
+        core.rename_tag(&home, "house").unwrap();
+        core.untag_task(&task, &work).unwrap();
+        let renamed = core.tags();
+        core.delete_tag(&home).unwrap();
+
+        let record = |id: &str, name: &str| TagRecord {
+            id: id.to_owned(),
+            name: name.to_owned(),
+        };
+        assert_eq!(tagged, [record(&home, "home"), record(&work, "work")]);
+        assert_eq!(renamed, [record(&home, "house"), record(&work, "work")]);
+        assert_eq!(core.tags(), [record(&work, "work")]);
+        assert!(core.tasks()[0].tags.is_empty());
+        assert_eq!(core.create_tag("work"), Ok(work.clone()));
+        assert_eq!(core.rename_tag(&work, "work"), Ok(()));
+    }
+
+    #[test]
+    fn malformed_tag_ids_are_rejected() {
+        let (mut core, _) = core();
+        let task = core.create("a").unwrap();
+
+        assert!(matches!(
+            core.tag_task(&task, "nope"),
+            Err(FfiError::InvalidId { .. })
+        ));
     }
 
     #[test]
