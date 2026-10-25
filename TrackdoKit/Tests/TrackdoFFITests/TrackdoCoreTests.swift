@@ -2,8 +2,8 @@ import Testing
 import TrackdoFFI
 
 @Suite struct TrackdoCoreTests {
-    @Test func speaksProtocolVersion3() {
-        #expect(protocolVersion() == 3)
+    @Test func speaksProtocolVersion4() {
+        #expect(protocolVersion() == 4)
     }
 
     @Test func createdTaskIsListed() throws {

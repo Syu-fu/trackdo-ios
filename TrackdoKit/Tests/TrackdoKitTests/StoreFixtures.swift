@@ -63,7 +63,7 @@ func firstOpId(of request: StubServer.Recorded) -> String {
     sentOps(request)[0]["op_id"] as! String
 }
 
-let emptySnapshot = status(200, #"{"log_id":"\#(testLog)","seq":null,"tasks":[],"time_entries":[]}"#)
+let emptySnapshot = status(200, #"{"log_id":"\#(testLog)","seq":null,"tasks":[],"time_entries":[],"tags":[]}"#)
 
 /// An event stream delivering `ops` as the server would, from seq 1.
 func eventStream(_ ops: [Data], log: String = testLog) -> StubServer.Handler {
@@ -79,7 +79,7 @@ func opsOf(_ core: TrackdoCore) -> [Data] {
     return batch.map { try! JSONSerialization.data(withJSONObject: $0) }
 }
 
-let healthy = status(200, #"{"status":"ok","protocol_version":3}"#)
+let healthy = status(200, #"{"status":"ok","protocol_version":4}"#)
 
 func routes(
     health: @escaping StubServer.Handler = healthy,

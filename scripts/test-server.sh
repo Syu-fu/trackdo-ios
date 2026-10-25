@@ -9,17 +9,19 @@
 # macOS runners CI uses have no Docker to run its container image.
 set -euo pipefail
 
-version=v0.2.0
+version=v0.3.1
 root=$(cd "$(dirname "$0")/.." && pwd)
 state="$root/target/test-server"
 port=${TRACKDO_TEST_SERVER_PORT:-18787}
 token=integration-test-token
-binary="$state/bin/trackdo-server"
+# Per version, so changing `version` installs that release.
+install_root="$state/$version"
+binary="$install_root/bin/trackdo-server"
 pidfile="$state/server.pid"
 
 install_server() {
   if [[ ! -x "$binary" ]]; then
-    cargo install --locked --quiet --root "$state" \
+    cargo install --locked --quiet --root "$install_root" \
       --git https://github.com/Syu-fu/trackdo-server --tag "$version" trackdo-server
   fi
 }

@@ -4,6 +4,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use trackdo_core::env::{Clock, IdGen};
 use trackdo_core::op::OpId;
+use trackdo_core::tag::TagId;
 use trackdo_core::task::TaskId;
 use trackdo_core::time_entry::TimeEntryId;
 use uuid::Uuid;
@@ -32,6 +33,10 @@ impl IdGen for UuidV7 {
 
     fn time_entry_id(&mut self) -> TimeEntryId {
         TimeEntryId(Uuid::now_v7().as_u128())
+    }
+
+    fn tag_id(&mut self) -> TagId {
+        TagId(Uuid::now_v7().as_u128())
     }
 
     fn op_id(&mut self) -> OpId {
@@ -66,7 +71,12 @@ mod tests {
     fn ids_are_uuid_v7() {
         let mut ids = UuidV7;
 
-        let generated = [ids.task_id().0, ids.time_entry_id().0, ids.op_id().0];
+        let generated = [
+            ids.task_id().0,
+            ids.time_entry_id().0,
+            ids.tag_id().0,
+            ids.op_id().0,
+        ];
 
         for id in generated {
             assert_eq!(Uuid::from_u128(id).get_version_num(), 7);

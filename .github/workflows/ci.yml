@@ -49,7 +49,7 @@ jobs:
         run: scripts/swift-coverage.sh
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: target/test-server/bin
+          path: target/test-server/v*
           key: trackdo-server-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/test-server.sh') }}
       - name: Integration tests
         run: scripts/integration-test.sh

@@ -87,7 +87,8 @@ mod tests {
     #[test]
     fn restored_core_has_the_same_data_and_position() {
         let (mut core, _) = new_core();
-        let snapshot = json!({ "log_id": LOG, "seq": 7, "tasks": [], "time_entries": [] });
+        let snapshot =
+            json!({ "log_id": LOG, "seq": 7, "tasks": [], "time_entries": [], "tags": [] });
         core.apply_snapshot(&serde_json::to_vec(&snapshot).unwrap());
         let task = core.create("a").unwrap();
         core.start(&task).unwrap();
@@ -111,6 +112,18 @@ mod tests {
         let sent: Vec<Value> =
             serde_json::from_slice(&restored.next_push_batch().unwrap()).unwrap();
         assert_eq!(sent[0]["hlc"]["device"], device);
+    }
+
+    #[test]
+    fn state_stored_before_tags_still_loads() {
+        let (mut core, _) = new_core();
+        core.create("a").unwrap();
+        let mut stored = stored(&core);
+        stored["state"].as_object_mut().unwrap().remove("tags");
+
+        let restored = restore(&serde_json::to_vec(&stored).unwrap()).unwrap();
+
+        assert_eq!(restored.tasks(), core.tasks());
     }
 
     #[test]

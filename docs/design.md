@@ -1,7 +1,7 @@
 # trackdo-ios design
 
 The iOS client of trackdo. Domain logic, conflict resolution and timer healing
-live in [trackdo-core](https://github.com/Syu-fu/trackdo-core) v0.3.1; the
+live in [trackdo-core](https://github.com/Syu-fu/trackdo-core) v0.4.0; the
 sync API is specified in trackdo-server's
 [`docs/design.md`](https://github.com/Syu-fu/trackdo-server/blob/main/docs/design.md).
 This client only drives them.
@@ -43,6 +43,8 @@ reads owned value types published by a `@MainActor` `@Observable` model.
   in `Application Support/trackdo/state.json`. `format` versions the local
   file and is independent of `PROTOCOL_VERSION`. `ReplicaStateDto` comes
   from `trackdo-protocol`, which validates it on load like server data.
+  Files written before trackdo-core v0.4.0, without tags and the newer task
+  fields, still load.
 - A file that cannot be read is reported instead of being replaced by a new
   replica, since it may hold unsent edits.
 - The file is written atomically after every call that changes state:
@@ -97,8 +99,8 @@ reads owned value types published by a `@MainActor` `@Observable` model.
   for development.
 - The token is a Keychain generic password with
   `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`.
-- Settings are saved only after `GET /healthz` reports `protocol_version` 3
-  and an authenticated `GET /snapshot` succeeds.
+- Settings are saved only after `GET /healthz` reports the client's
+  `protocol_version` (4) and an authenticated `GET /snapshot` succeeds.
 - Without settings, the app works locally only.
 - Switching servers is allowed: the new `log_id` triggers a resync, and core
   queues the writes the new server lacks.
@@ -148,6 +150,10 @@ reads owned value types published by a `@MainActor` `@Observable` model.
   - Settings: server URL, token, connection check and sync status.
 - Not in the MVP: reports, widgets, Live Activities, notifications, search,
   iPad layouts.
+- Priorities, notes, due dates, scheduled times, subtasks and tags from
+  trackdo-core v0.4.0 are not shown or edited yet. Other clients' writes to
+  them are still merged, stored and synced, and a task below a deleted task
+  is hidden as deleted.
 
 ## Testing and CI
 
@@ -157,7 +163,7 @@ reads owned value types published by a `@MainActor` `@Observable` model.
   least 80% line coverage of its hand-written sources, checked by
   `scripts/swift-coverage.sh`. The generated bindings and the app's views are
   not counted.
-- Integration tests run `TrackdoKit` against a real trackdo-server v0.2.0
+- Integration tests run `TrackdoKit` against a real trackdo-server v0.3.1
   (`scripts/integration-test.sh`). `scripts/test-server.sh` builds the server
   with `cargo install` and runs it on 127.0.0.1, both locally and in CI:
   macOS runners have no Docker, so the published image cannot be used. It can

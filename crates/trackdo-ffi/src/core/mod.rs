@@ -93,12 +93,14 @@ impl<C: Clock + Clone, G: IdGen> Core<C, G> {
         Ok(ids::encode(id.0))
     }
 
-    /// Tasks that are not deleted, oldest first since ids are UUIDv7.
+    /// Tasks that are not deleted, oldest first since ids are UUIDv7. A task
+    /// below a deleted one counts as deleted too.
     pub(crate) fn tasks(&self) -> Vec<TaskRecord> {
         let now = self.now();
+        let hierarchy = self.replica.hierarchy();
         self.replica
             .tasks()
-            .filter(|task| !task.is_deleted())
+            .filter(|task| !hierarchy.is_deleted(task.id()))
             .map(|task| self.task_record(task, now))
             .collect()
     }
@@ -218,6 +220,20 @@ pub(crate) mod tests {
         let id = core.create("a").unwrap();
 
         core.delete(&id).unwrap();
+
+        assert!(core.tasks().is_empty());
+    }
+
+    #[test]
+    fn tasks_below_a_deleted_task_are_not_listed() {
+        let (mut core, _) = core();
+        let parent = core.create("project").unwrap();
+        let child = core.create("step").unwrap();
+        core.replica
+            .set_parent(task(&child).unwrap(), Some(task(&parent).unwrap()))
+            .unwrap();
+
+        core.delete(&parent).unwrap();
 
         assert!(core.tasks().is_empty());
     }

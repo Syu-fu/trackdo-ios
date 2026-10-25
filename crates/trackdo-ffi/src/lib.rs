@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn reports_protocol_version_of_trackdo_protocol() {
-        assert_eq!(protocol_version(), 3);
+        assert_eq!(protocol_version(), 4);
     }
 
     #[test]
@@ -259,8 +259,7 @@ mod tests {
         other.create("a".to_owned()).unwrap();
         let ops: Vec<serde_json::Value> =
             serde_json::from_slice(&other.next_push_batch().unwrap()).unwrap();
-        let snapshot =
-            serde_json::json!({ "log_id": log, "seq": 0, "tasks": [], "time_entries": [] });
+        let snapshot = serde_json::json!({ "log_id": log, "seq": 0, "tasks": [], "time_entries": [], "tags": [] });
         assert!(core.needs_snapshot());
 
         let applied = core.apply_snapshot(serde_json::to_vec(&snapshot).unwrap());

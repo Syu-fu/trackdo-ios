@@ -12,7 +12,7 @@ import Testing
     // MARK: GET /healthz
 
     @Test func healthCheckPassesForCompatibleServer() async throws {
-        server.respond(status: 200, json: #"{"status":"ok","protocol_version":3}"#)
+        server.respond(status: 200, json: #"{"status":"ok","protocol_version":4}"#)
 
         try await ServerClient.checkHealth(of: server.url, session: server.session)
 
@@ -23,7 +23,7 @@ import Testing
     }
 
     @Test func healthCheckRefusesOtherProtocolVersions() async {
-        server.respond(status: 200, json: #"{"status":"ok","protocol_version":4}"#)
+        server.respond(status: 200, json: #"{"status":"ok","protocol_version":3}"#)
 
         await #expect(throws: ServerError.unsupportedProtocol) {
             try await ServerClient.checkHealth(of: server.url, session: server.session)
@@ -63,7 +63,7 @@ import Testing
         #expect(request.method == "POST")
         #expect(request.path == "/base/ops")
         #expect(request.headers["Authorization"] == "Bearer secret")
-        #expect(request.headers["Trackdo-Protocol"] == "3")
+        #expect(request.headers["Trackdo-Protocol"] == "4")
         #expect(request.headers["Content-Type"] == "application/json")
         #expect(request.body == Data("[]".utf8))
     }
@@ -96,7 +96,7 @@ import Testing
         #expect(request.method == "GET")
         #expect(request.path == "/base/snapshot")
         #expect(request.headers["Authorization"] == "Bearer secret")
-        #expect(request.headers["Trackdo-Protocol"] == "3")
+        #expect(request.headers["Trackdo-Protocol"] == "4")
     }
 
     @Test(arguments: [
@@ -138,7 +138,7 @@ import Testing
         #expect(request.headers["Last-Event-ID"] == "log:4")
         #expect(request.headers["Accept"] == "text/event-stream")
         #expect(request.headers["Authorization"] == "Bearer secret")
-        #expect(request.headers["Trackdo-Protocol"] == "3")
+        #expect(request.headers["Trackdo-Protocol"] == "4")
     }
 
     @Test func streamsFromTheStartWithoutAPosition() async throws {

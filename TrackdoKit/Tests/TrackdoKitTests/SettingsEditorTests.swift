@@ -100,7 +100,7 @@ import Testing
 
     @Test(arguments: [
         (healthy, status(401), ServerError.unauthorized),
-        (status(200, #"{"status":"ok","protocol_version":4}"#), emptySnapshot, .unsupportedProtocol),
+        (status(200, #"{"status":"ok","protocol_version":3}"#), emptySnapshot, .unsupportedProtocol),
         (offline, offline, .offline(.notConnectedToInternet)),
     ])
     func keepsTheOldSettingsWhenTheServerRefuses(

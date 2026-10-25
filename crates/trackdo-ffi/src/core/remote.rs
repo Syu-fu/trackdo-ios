@@ -174,7 +174,8 @@ mod tests {
     const OTHER_LOG: &str = "01928f30-0000-7000-8000-000000000002";
 
     fn snapshot_body(log_id: &str, seq: Option<u64>) -> Vec<u8> {
-        let body = json!({ "log_id": log_id, "seq": seq, "tasks": [], "time_entries": [] });
+        let body =
+            json!({ "log_id": log_id, "seq": seq, "tasks": [], "time_entries": [], "tags": [] });
         serde_json::to_vec(&body).unwrap()
     }
 
@@ -241,7 +242,7 @@ mod tests {
     #[test]
     fn malformed_snapshot_is_invalid() {
         let non_canonical = json!({
-            "log_id": LOG, "seq": 1, "time_entries": [],
+            "log_id": LOG, "seq": 1, "time_entries": [], "tags": [],
             "tasks": [{
                 "id": LOG, "status": null, "deleted": null,
                 "title": { "value": " padded ", "hlc": { "wall_ms": 1, "counter": 0, "device": LOG } }
@@ -390,7 +391,7 @@ mod tests {
         let other_task = ids::encode(42);
         let hlc = json!({ "wall_ms": 1, "counter": 0, "device": LOG });
         let body = json!({
-            "log_id": LOG, "seq": 1, "tasks": [],
+            "log_id": LOG, "seq": 1, "tasks": [], "tags": [],
             "time_entries": [{
                 "id": entry, "task_id": other_task, "stopped_at": null, "deleted": null,
                 "started_at": { "value": 1, "hlc": hlc }
@@ -418,7 +419,7 @@ mod tests {
         let mut op = ops_of(&other)[0].clone();
         op["hlc"]["counter"] = json!(u32::MAX);
         let overflowing = json!({
-            "log_id": LOG, "seq": 1, "time_entries": [],
+            "log_id": LOG, "seq": 1, "time_entries": [], "tags": [],
             "tasks": [{ "id": task, "title": null, "deleted": null, "status": {
                 "value": "todo", "hlc": op["hlc"].clone()
             } }]
