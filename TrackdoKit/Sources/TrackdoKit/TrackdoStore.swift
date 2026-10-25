@@ -217,6 +217,58 @@ public actor TrackdoStore {
         try perform { try $0.delete(taskId: taskId) }
     }
 
+    public func setPriority(taskId: String, priority: Priority) throws {
+        try perform { try $0.setPriority(taskId: taskId, priority: priority) }
+    }
+
+    /// An empty note removes the note.
+    public func setNote(taskId: String, note: String) throws {
+        try perform { try $0.setNote(taskId: taskId, note: note) }
+    }
+
+    /// `nil` clears the due date.
+    public func setDue(taskId: String, due: CalendarDate?) throws {
+        try perform { try $0.setDue(taskId: taskId, due: due) }
+    }
+
+    /// `nil` unschedules the task.
+    public func schedule(taskId: String, atMs: UInt64?) throws {
+        try perform { try $0.schedule(taskId: taskId, atMs: atMs) }
+    }
+
+    /// `nil` moves the task to the top level.
+    public func setParent(taskId: String, parentId: String?) throws {
+        try perform { try $0.setParent(taskId: taskId, parentId: parentId) }
+    }
+
+    /// Returns the new task's id.
+    @discardableResult
+    public func createSubtask(parentId: String, title: String) throws -> String {
+        try perform { try $0.createSubtask(parentId: parentId, title: title) }
+    }
+
+    /// Returns the new tag's id, or that of the tag already named so.
+    @discardableResult
+    public func createTag(name: String) throws -> String {
+        try perform { try $0.createTag(name: name) }
+    }
+
+    public func renameTag(tagId: String, name: String) throws {
+        try perform { try $0.renameTag(tagId: tagId, name: name) }
+    }
+
+    public func deleteTag(tagId: String) throws {
+        try perform { try $0.deleteTag(tagId: tagId) }
+    }
+
+    public func tagTask(taskId: String, tagId: String) throws {
+        try perform { try $0.tagTask(taskId: taskId, tagId: tagId) }
+    }
+
+    public func untagTask(taskId: String, tagId: String) throws {
+        try perform { try $0.untagTask(taskId: taskId, tagId: tagId) }
+    }
+
     /// Returns the new entry's id.
     @discardableResult
     public func start(taskId: String) throws -> String {
@@ -245,6 +297,10 @@ public actor TrackdoStore {
 
     public func tasks() -> [TaskRecord] {
         core.tasks()
+    }
+
+    public func tags() -> [TagRecord] {
+        core.tags()
     }
 
     public func runningEntry() -> EntryRecord? {

@@ -2,25 +2,6 @@ import Foundation
 import Observation
 import TrackdoFFI
 
-/// A task as the list shows it.
-public struct TaskItem: Identifiable, Equatable, Sendable {
-    public let id: String
-    /// `nil` until the task's title arrives from the server.
-    public let title: String?
-    public let isDone: Bool
-    public let isRunning: Bool
-    /// Time spent at the last reload.
-    public let totalMs: UInt64
-
-    init(_ record: TaskRecord) {
-        id = record.id
-        title = record.title
-        isDone = record.isDone
-        isRunning = record.isInProgress
-        totalMs = record.totalMs
-    }
-}
-
 /// The running timer as the list shows it.
 public struct RunningTimer: Equatable, Sendable {
     public let entryId: String
@@ -41,12 +22,19 @@ public enum TitleIssue: Error, Equatable, Sendable {
 public enum TaskListIssue: Equatable, Sendable {
     /// The task or entry was deleted, e.g. on another device.
     case taskGone
+    /// The tag was deleted, e.g. on another device.
+    case tagGone
+    /// The move would put a task below itself, e.g. after a move on another
+    /// device.
+    case wouldCycle
     /// The command failed otherwise, e.g. the state could not be saved.
     case failed(String)
 
     init(_ error: any Error) {
         switch error as? FfiError {
         case .TaskNotFound, .TaskDeleted, .EntryNotFound, .EntryDeleted, .EntryNotRunning: self = .taskGone
+        case .TagNotFound, .TagDeleted: self = .tagGone
+        case .Cycle: self = .wouldCycle
         case let .some(error): self = .failed(error.localizedDescription)
         case nil: self = .failed(String(describing: error))
         }
@@ -78,20 +66,21 @@ public final class TaskListModel {
         loadedAt = now()
     }
 
-    /// Reads the tasks and the running timer from the store.
+    /// Reads the tasks and the running timer from the store. Only top-level
+    /// tasks are listed; subtasks live on their parent's screen.
     public func reload() async {
         let records = await store.tasks()
         let entry = await store.runningEntry()
         loadedAt = now()
         revision += 1
-        let items = records.map(TaskItem.init)
+        let items = records.filter { $0.parentId == nil }.map { TaskItem($0, among: records) }
         openTasks = items.filter { !$0.isDone }
         doneTasks = items.filter(\.isDone)
         running = entry.map { entry in
             RunningTimer(
                 entryId: entry.id,
                 taskId: entry.taskId,
-                title: items.first { $0.id == entry.taskId }?.title,
+                title: records.first { $0.id == entry.taskId }?.title,
                 elapsedMs: entry.durationMs
             )
         }
@@ -159,7 +148,7 @@ public final class TaskListModel {
             try await command(store)
             issue = nil
         } catch {
-            if let titleIssue = Self.titleIssue(error as? FfiError) {
+            if let ffiError = error as? FfiError, let titleIssue = TitleIssue(ffiError) {
                 throw titleIssue
             }
             issue = TaskListIssue(error)
@@ -170,13 +159,15 @@ public final class TaskListModel {
     private static func trimmed(_ title: String) -> String {
         title.trimmingCharacters(in: .whitespaces)
     }
+}
 
-    private static func titleIssue(_ error: FfiError?) -> TitleIssue? {
+extension TitleIssue {
+    init?(_ error: FfiError) {
         switch error {
-        case .EmptyTitle: .empty
-        case .TitleContainsLineBreak: .containsLineBreak
-        case let .TitleTooLong(max, _): .tooLong(max: Int(max))
-        default: nil
+        case .EmptyTitle: self = .empty
+        case .TitleContainsLineBreak: self = .containsLineBreak
+        case let .TitleTooLong(max, _): self = .tooLong(max: Int(max))
+        default: return nil
         }
     }
 }

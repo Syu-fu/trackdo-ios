@@ -420,6 +420,16 @@
         }
       }
     },
+    "It may have been moved on another device. Choose another task." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "別の端末で移動された可能性があります。別のタスクを選んでください。"
+          }
+        }
+      }
+    },
     "Keep Editing" : {
       "localizations" : {
         "ja" : {
@@ -930,6 +940,16 @@
         }
       }
     },
+    "The list now shows the current tags." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一覧は現在のタグを表示しています。"
+          }
+        }
+      }
+    },
     "The list now shows the current tasks." : {
       "localizations" : {
         "ja" : {
@@ -1016,6 +1036,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "設定を保存できませんでした"
+          }
+        }
+      }
+    },
+    "The tag was deleted on another device" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグは別の端末で削除されました"
+          }
+        }
+      }
+    },
+    "The task can’t go below its own subtask" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクを自分のサブタスクの下には移動できません"
           }
         }
       }

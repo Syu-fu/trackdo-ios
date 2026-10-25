@@ -15,6 +15,8 @@ extension TaskListIssue {
     var title: LocalizedStringResource {
         switch self {
         case .taskGone: "The task was deleted on another device"
+        case .tagGone: "The tag was deleted on another device"
+        case .wouldCycle: "The task can’t go below its own subtask"
         case .failed: "The change could not be saved"
         }
     }
@@ -22,6 +24,8 @@ extension TaskListIssue {
     var description: LocalizedStringResource {
         switch self {
         case .taskGone: "The list now shows the current tasks."
+        case .tagGone: "The list now shows the current tags."
+        case .wouldCycle: "It may have been moved on another device. Choose another task."
         case let .failed(reason): "Try again. If this keeps happening, restart the app. (\(reason))"
         }
     }

@@ -84,6 +84,38 @@ import TrackdoFFI
         #expect(await store.tasks().isEmpty)
     }
 
+    @Test func everyPlanningCommandIsAvailable() async throws {
+        let store = try await makeStore(connected: false)
+        let task = try await store.create(title: "a")
+        let other = try await store.create(title: "b")
+        let due = CalendarDate(year: 2026, month: 10, day: 31)
+
+        try await store.setPriority(taskId: task, priority: .medium)
+        try await store.setNote(taskId: task, note: "n")
+        try await store.setDue(taskId: task, due: due)
+        try await store.schedule(taskId: task, atMs: 5)
+        try await store.setParent(taskId: other, parentId: task)
+        let sub = try await store.createSubtask(parentId: task, title: "c")
+        let tag = try await store.createTag(name: "t")
+        try await store.renameTag(tagId: tag, name: "u")
+        try await store.tagTask(taskId: task, tagId: tag)
+        let tagged = await store.tasks()
+        try await store.untagTask(taskId: task, tagId: tag)
+        let tags = await store.tags()
+        try await store.deleteTag(tagId: tag)
+
+        let first = try #require(tagged.first)
+        #expect(first.priority == .medium)
+        #expect(first.note == "n")
+        #expect(first.due == due)
+        #expect(first.scheduledAtMs == 5)
+        #expect(first.tags.map(\.name) == ["u"])
+        #expect(tagged.filter { $0.parentId == task }.map(\.id) == [other, sub])
+        #expect(tags.map(\.id) == [tag])
+        #expect(await store.tags().isEmpty)
+        #expect(try savedCore().tasks().count == 3)
+    }
+
     // MARK: Pushing
 
     @Test func nothingIsSentWhileDisconnected() async throws {

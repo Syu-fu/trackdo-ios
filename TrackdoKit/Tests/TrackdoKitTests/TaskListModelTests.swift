@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TrackdoFFI
 @testable import TrackdoKit
 
 /// A clock the tests move by hand.
@@ -47,6 +48,53 @@ final class ManualClock {
 
         #expect(model.openTasks.map(\.id) == [id])
         #expect(model.openTasks.first?.title == "Write report")
+    }
+
+    @Test func listsTopLevelTasksWithTheirSubtaskProgress() async throws {
+        let parent = try await store.create(title: "Move house")
+        let done = try await store.createSubtask(parentId: parent, title: "Boxes")
+        let nested = try await store.createSubtask(parentId: done, title: "Tape")
+        _ = try await store.createSubtask(parentId: parent, title: "Address")
+        try await store.complete(taskId: done)
+
+        let model = await makeModel()
+
+        #expect(model.openTasks.map(\.id) == [parent])
+        #expect(model.doneTasks.isEmpty)
+        let item = try #require(model.openTasks.first)
+        #expect(item.subtaskCount == 2)
+        #expect(item.doneSubtaskCount == 1)
+        #expect(!model.openTasks.contains { $0.id == nested })
+    }
+
+    @Test func aRunningSubtaskIsShownByItsOwnTitle() async throws {
+        let parent = try await store.create(title: "Move house")
+        let child = try await store.createSubtask(parentId: parent, title: "Boxes")
+        try await store.start(taskId: child)
+
+        let model = await makeModel()
+
+        #expect(model.running?.taskId == child)
+        #expect(model.running?.title == "Boxes")
+    }
+
+    @Test func listedTasksCarryTheirPlanning() async throws {
+        let id = try await store.create(title: "Report")
+        let tag = try await store.createTag(name: "work")
+        try await store.tagTask(taskId: id, tagId: tag)
+        try await store.setPriority(taskId: id, priority: .high)
+        try await store.setDue(taskId: id, due: CalendarDate(year: 2026, month: 10, day: 31))
+        try await store.schedule(taskId: id, atMs: 1_800_000_000_000)
+        try await store.setNote(taskId: id, note: "Ask first")
+
+        let item = try #require(await makeModel().openTasks.first)
+
+        #expect(item.priority == .high)
+        #expect(item.due == CalendarDay(year: 2026, month: 10, day: 31))
+        #expect(item.scheduledAt == Date(timeIntervalSince1970: 1_800_000_000))
+        #expect(item.note == "Ask first")
+        #expect(item.tags.map(\.name) == ["work"])
+        #expect(item.parentId == nil)
     }
 
     @Test func everyReloadRaisesTheRevision() async {
