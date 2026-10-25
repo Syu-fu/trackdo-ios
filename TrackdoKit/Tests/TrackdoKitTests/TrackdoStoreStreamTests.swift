@@ -142,11 +142,9 @@ import TrackdoFFI
         #expect(stopsSent() == 1)
     }
 
-    @Test func entryMovedByTheServerIsReported() async throws {
-        let local = try TrackdoStore(file: file, sleep: { [gate] in try await gate.sleep($0) })
-        let task = try await local.create(title: "a")
-        let entry = try await local.start(taskId: task)
-        let moved = try JSONSerialization.data(withJSONObject: [
+    /// An op deleting `entry` under a task it does not belong to.
+    func movedEntryOp(_ entry: String) throws -> Data {
+        try JSONSerialization.data(withJSONObject: [
             "op_id": UUID().uuidString.lowercased(),
             "hlc": ["wall_ms": 1, "counter": 0, "device": UUID().uuidString.lowercased()],
             "target": [
@@ -154,13 +152,45 @@ import TrackdoFFI
                 "change": ["field": "deleted", "value": true],
             ],
         ])
-        server.respond(routes(events: eventStream([moved])))
+    }
+
+    @Test func entryMovedByTheServerIsReported() async throws {
+        let local = try TrackdoStore(file: file, sleep: { [gate] in try await gate.sleep($0) })
+        let task = try await local.create(title: "a")
+        let entry = try await local.start(taskId: task)
+        server.respond(routes(events: eventStream([try movedEntryOp(entry)])))
 
         await local.connect(client: client)
         await gate.waitUntilBackingOff()
 
         guard case .serverInconsistent = await local.problem else {
             Issue.record("expected serverInconsistent, got \(String(describing: await local.problem))")
+            return
+        }
+    }
+
+    @Test func pushSucceedingAfterTheStreamFailedKeepsItsProblem() async throws {
+        let local = try TrackdoStore(file: file, sleep: { [gate] in try await gate.sleep($0) })
+        let task = try await local.create(title: "a")
+        let entry = try await local.start(taskId: task)
+        server.holdOpen("events")
+        await local.connect(client: client)
+        await local.waitUntilIdle()
+        await local.disconnect()
+        server.respond(routes(events: eventStream([try movedEntryOp(entry)])))
+        await local.connect(client: client)
+        await gate.waitUntilBackingOff()
+        await expectServerInconsistent(local)
+
+        try await local.rename(taskId: task, title: "b")
+        await local.waitUntilIdle()
+
+        await expectServerInconsistent(local)
+    }
+
+    func expectServerInconsistent(_ store: TrackdoStore) async {
+        guard case .serverInconsistent = await store.problem else {
+            Issue.record("expected serverInconsistent, got \(String(describing: await store.problem))")
             return
         }
     }

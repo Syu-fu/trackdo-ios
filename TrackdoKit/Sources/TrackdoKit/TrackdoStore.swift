@@ -66,6 +66,18 @@ public actor TrackdoStore {
     private var statusHandler: (@Sendable (SyncStatus) -> Void)?
     private var changeHandler: (@Sendable () -> Void)?
 
+    /// Each sync channel's problem, so that one recovering does not hide
+    /// another's: a push going through says nothing of the event stream.
+    private var pushProblem: SyncProblem? {
+        didSet { updateProblem() }
+    }
+    private var streamProblem: SyncProblem? {
+        didSet { updateProblem() }
+    }
+    private var saveProblem: SyncProblem? {
+        didSet { updateProblem() }
+    }
+
     public private(set) var problem: SyncProblem? {
         didSet {
             if problem != oldValue {
@@ -118,7 +130,8 @@ public actor TrackdoStore {
         isSuspended = false
         backoff.reset()
         streamBackoff.reset()
-        problem = nil
+        pushProblem = nil
+        streamProblem = nil
         updateStatus()
         requestPush()
         streamTask = Task {
@@ -260,9 +273,10 @@ public actor TrackdoStore {
         defer { changeHandler?() }
         do {
             try file.save(core.stateJson())
+            saveProblem = nil
         } catch {
             Self.logger.error("Saving the state failed: \(error)")
-            problem = .saveFailed(String(describing: error))
+            saveProblem = .saveFailed(String(describing: error))
         }
     }
 
@@ -285,6 +299,10 @@ public actor TrackdoStore {
             await streamTask.value
         }
         isStreaming = false
+    }
+
+    private func updateProblem() {
+        problem = pushProblem ?? streamProblem ?? saveProblem
     }
 
     private func updateStatus() {
@@ -327,15 +345,19 @@ public actor TrackdoStore {
         switch outcome {
         case .accepted:
             backoff.reset()
-            problem = nil
+            pushProblem = nil
             return true
         case let .rejected(opId, code, message):
             Self.logger.error("Server rejected op \(opId) for good (\(code)): \(message)")
             return true
         case .unauthorized:
-            return halt(because: .unauthorized)
+            pushProblem = .unauthorized
+            isHalted = true
+            return false
         case .unsupportedProtocol:
-            return halt(because: .unsupportedProtocol)
+            pushProblem = .unsupportedProtocol
+            isHalted = true
+            return false
         case .retry:
             return await backOff(because: .unreachable, retrying: retrying)
         case let .unexpected(status, message):
@@ -368,9 +390,11 @@ public actor TrackdoStore {
                 case ServerError.resyncRequired:
                     mustResync = true
                 case ServerError.unauthorized:
-                    _ = halt(because: .unauthorized)
+                    streamProblem = .unauthorized
+                    isHalted = true
                 case ServerError.unsupportedProtocol:
-                    _ = halt(because: .unsupportedProtocol)
+                    streamProblem = .unsupportedProtocol
+                    isHalted = true
                 default:
                     guard await waitToReconnect(because: Self.problem(for: error)) else {
                         return
@@ -436,7 +460,7 @@ public actor TrackdoStore {
 
     /// Waits before reopening the stream. Returns `false` when cancelled.
     private func waitToReconnect(because problem: SyncProblem) async -> Bool {
-        self.problem = problem
+        streamProblem = problem
         do {
             try await sleep(streamBackoff.nextDelay())
         } catch {
@@ -445,23 +469,17 @@ public actor TrackdoStore {
         return !Task.isCancelled
     }
 
-    private func halt(because problem: SyncProblem) -> Bool {
-        isHalted = true
-        self.problem = problem
-        return false
-    }
-
     /// The stream opening shows the server is reachable again.
     private func streamOpened() {
         isStreaming = true
-        problem = nil
+        streamProblem = nil
         updateStatus()
     }
 
     /// Waits before the next attempt. Returns `false` when cancelled, or at
     /// once without `retrying`.
     private func backOff(because problem: SyncProblem, retrying: Bool = true) async -> Bool {
-        self.problem = problem
+        pushProblem = problem
         guard retrying else {
             return false
         }
