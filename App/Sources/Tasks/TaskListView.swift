@@ -7,8 +7,8 @@ enum TaskRoute: Hashable {
     case sync
 }
 
-/// The app's home: every task, the running timer on top, Sync settings in
-/// the navigation bar and Add Task at the bottom. Everything works without a
+/// The app's home: every task, Sync settings in the navigation bar, and the
+/// running timer and Add Task at the bottom. Everything works without a
 /// server.
 struct TaskListView: View {
     let model: TaskListModel
@@ -38,10 +38,6 @@ struct TaskListView: View {
                 DadsNotificationBanner(kind: .error, title: issue.title, description: issue.description)
                     .bannerRow()
             }
-            if let timer = model.running {
-                RunningTimerBanner(model: model, timer: timer)
-                    .bannerRow()
-            }
             if model.openTasks.isEmpty && model.doneTasks.isEmpty {
                 emptyState
                     .listRowSeparator(.hidden)
@@ -59,8 +55,16 @@ struct TaskListView: View {
                     Label("Sync Settings", systemImage: "gearshape")
                 }
             }
-            // Adding is frequent, so it sits in the bottom trailing corner,
-            // where the thumb of the hand holding the phone reaches.
+            // Stopping and adding are frequent, so they sit at the bottom,
+            // where the thumb of the hand holding the phone reaches; Add
+            // Task takes the trailing corner.
+            if let timer = model.running {
+                ToolbarItem(placement: .bottomBar) {
+                    RunningTimerBar(model: model, timer: timer) {
+                        path.append(.task(timer.taskId))
+                    }
+                }
+            }
             ToolbarSpacer(.flexible, placement: .bottomBar)
             ToolbarItem(placement: .bottomBar) {
                 Button("Add Task", systemImage: "plus") { sheet = .add }
