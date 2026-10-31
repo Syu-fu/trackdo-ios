@@ -213,4 +213,21 @@ import TrackdoFFI
         #expect(model.durationMs(of: entry, at: clock.now) == 60_000)
         #expect(model.totalMs(at: clock.now) == 60_000)
     }
+
+    @Test func aRunningSubtaskCountsUpFromTheLastReload() async throws {
+        let id = try await store.create(title: "Move")
+        let running = try await store.createSubtask(parentId: id, title: "Pack")
+        let idle = try await store.createSubtask(parentId: id, title: "Buy")
+        _ = try await store.addEntry(taskId: idle, startedAtMs: ms(earlier), stoppedAtMs: ms(earlier + 60))
+        try await store.start(taskId: running)
+        let model = await makeModel(for: id)
+        let subtasks = Dictionary(uniqueKeysWithValues: model.subtasks.map { ($0.id, $0) })
+
+        clock.advance(by: 30)
+
+        let runningItem = try #require(subtasks[running])
+        #expect(model.totalMs(of: runningItem, at: clock.now) == runningItem.totalMs + 30_000)
+        #expect(model.totalMs(of: try #require(subtasks[idle]), at: clock.now) == 60_000)
+        #expect(model.totalMs(at: clock.now) == 0)
+    }
 }

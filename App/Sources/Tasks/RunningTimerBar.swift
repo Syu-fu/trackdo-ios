@@ -34,7 +34,7 @@ struct RunningTimerBar: View {
             .buttonStyle(.plain)
             .accessibilityElement(children: .combine)
             .accessibilityLabel(Text("Timer running"))
-            .accessibilityHint(Text("Shows its time entries."))
+            .accessibilityHint(Text("Shows its details."))
             Button {
                 Task { await model.stop() }
             } label: {

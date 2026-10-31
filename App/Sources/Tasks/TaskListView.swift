@@ -38,7 +38,8 @@ struct TaskListView: View {
             list
                 .navigationDestination(for: TaskRoute.self) { route in
                     switch route {
-                    case let .task(id): TaskDetailView(taskId: id, store: store, revision: model.revision)
+                    case let .task(id):
+                        TaskDetailView(taskId: id, store: store, revision: model.revision) { path.append(.task($0)) }
                     case .sync: SettingsView(editor: settings, status: syncStatus)
                     }
                 }
@@ -124,7 +125,7 @@ struct TaskListView: View {
         if !items.isEmpty {
             Section {
                 ForEach(items) { item in
-                    TaskRow(model: model, item: item) { perform($0, on: item) }
+                    TaskRow(item: item, totalMs: { model.totalMs(of: item, at: $0) }) { perform($0, on: item) }
                         // The row's 44 pt targets carry their own space; the
                         // default insets would only make the row taller.
                         .listRowInsets(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
@@ -183,6 +184,8 @@ struct TaskListView: View {
             sheet = .rename(item)
         case .toggleDone:
             Task { item.isDone ? await model.reopen(item.id) : await model.complete(item.id) }
+        case .toggleTimer:
+            Task { item.isRunning ? await model.stop() : await model.start(item.id) }
         case .delete:
             pendingDeletion = item
         }

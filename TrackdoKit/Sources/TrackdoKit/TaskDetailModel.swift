@@ -185,10 +185,12 @@ public final class TaskDetailModel {
     }
 
     public func totalMs(at date: Date) -> UInt64 {
-        guard let task else {
-            return 0
-        }
-        return task.isRunning ? task.totalMs + sinceReloadMs(at: date) : task.totalMs
+        task.map { totalMs(of: $0, at: date) } ?? 0
+    }
+
+    /// For the task itself or one of its subtasks.
+    public func totalMs(of item: TaskItem, at date: Date) -> UInt64 {
+        item.isRunning ? item.totalMs + sinceReloadMs(at: date) : item.totalMs
     }
 
     // MARK: Internals

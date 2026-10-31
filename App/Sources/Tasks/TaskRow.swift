@@ -1,11 +1,12 @@
 import SwiftUI
 import TrackdoKit
 
-/// What a row asks the list to do.
+/// What a row asks its screen to do.
 enum TaskRowAction {
     case open
     case rename
     case toggleDone
+    case toggleTimer
     case delete
 }
 
@@ -17,10 +18,12 @@ enum TaskRowAction {
 /// actions. Dense text keeps the row short so more tasks fit on screen;
 /// planning details follow the time and wrap onto more lines rather than
 /// being cut off. The row holds buttons, so only the title and details open
-/// the task.
+/// the task. Subtask rows leave the menu out; their own screen has it.
 struct TaskRow: View {
-    let model: TaskListModel
     let item: TaskItem
+    /// The time to show, counting up while the timer runs.
+    let totalMs: (Date) -> UInt64
+    var showsMenu = true
     let onAction: (TaskRowAction) -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -35,7 +38,9 @@ struct TaskRow: View {
                 contents
                 HStack(spacing: 4) {
                     timerButton
-                    moreMenu
+                    if showsMenu {
+                        moreMenu
+                    }
                 }
             }
         }
@@ -63,7 +68,7 @@ struct TaskRow: View {
                     .dadsFont(.dns16B130)
                     .foregroundStyle(item.isDone ? DadsColor.gray600 : DadsColor.gray900)
                 TimelineView(.periodic(from: .now, by: 1)) { context in
-                    let ms = model.totalMs(of: item, at: context.date)
+                    let ms = totalMs(context.date)
                     let summary = TaskSummary(item: item, today: CalendarDay(context.date))
                     FlowLayout(spacing: 10, lineSpacing: 2) {
                         Text(verbatim: ElapsedTime.clock(ms)).monospacedDigit()
@@ -83,12 +88,12 @@ struct TaskRow: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityValue(item.isDone ? Text("Done") : Text(verbatim: ""))
-        .accessibilityHint(Text("Shows its time entries."))
+        .accessibilityHint(Text("Shows its details."))
     }
 
     private var timerButton: some View {
         TimerButton(isRunning: item.isRunning, title: item.displayTitle) {
-            Task { item.isRunning ? await model.stop() : await model.start(item.id) }
+            onAction(.toggleTimer)
         }
     }
 

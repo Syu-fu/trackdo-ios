@@ -91,6 +91,16 @@
         }
       }
     },
+    "Add Subtask" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サブタスクを追加"
+          }
+        }
+      }
+    },
     "Add Task" : {
       "localizations" : {
         "ja" : {
@@ -617,6 +627,16 @@
         }
       }
     },
+    "New Subtask" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新しいサブタスク"
+          }
+        }
+      }
+    },
     "New Task" : {
       "localizations" : {
         "ja" : {
@@ -997,12 +1017,12 @@
         }
       }
     },
-    "Shows its time entries." : {
+    "Shows its details." : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "記録を表示します。"
+            "value" : "詳細を表示します。"
           }
         }
       }
@@ -1123,6 +1143,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "自動停止"
+          }
+        }
+      }
+    },
+    "Subtasks" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サブタスク"
           }
         }
       }

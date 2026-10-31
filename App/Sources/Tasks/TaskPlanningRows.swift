@@ -56,9 +56,9 @@ struct TaskPlanningRows: View {
     }
 
     private var dueRow: some View {
-        HStack {
+        DateRow {
             PlanningLabel("Due Date", systemImage: "calendar")
-            Spacer()
+        } value: {
             if task.due != nil {
                 DatePicker("Due Date", selection: due, displayedComponents: .date)
                     .labelsHidden()
@@ -74,9 +74,9 @@ struct TaskPlanningRows: View {
     }
 
     private var scheduleRow: some View {
-        HStack {
+        DateRow {
             PlanningLabel("Planned For", systemImage: "clock")
-            Spacer()
+        } value: {
             if task.scheduledAt != nil {
                 DatePicker("Planned For", selection: scheduledAt)
                     .labelsHidden()
@@ -162,6 +162,28 @@ struct TaskPlanningRows: View {
         let calendar = Calendar.current
         let hour = calendar.dateInterval(of: .hour, for: date)?.start ?? date
         return calendar.date(byAdding: .hour, value: 1, to: hour) ?? date
+    }
+}
+
+/// A name and a date control on one line, or the control under the name
+/// when a date and time do not fit beside it.
+private struct DateRow<Label: View, Value: View>: View {
+    @ViewBuilder let label: Label
+    @ViewBuilder let value: Value
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack {
+                label
+                Spacer()
+                value
+            }
+            VStack(alignment: .trailing, spacing: 0) {
+                label.frame(maxWidth: .infinity, alignment: .leading)
+                HStack { value }
+            }
+            .padding(.bottom, 4)
+        }
     }
 }
 

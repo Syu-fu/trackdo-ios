@@ -3,24 +3,29 @@ import TrackdoKit
 
 /// One task in full. Completing and timing are frequent, so the checkbox
 /// and timer button sit beside the title, one tap each. Planning follows,
-/// each field changed in place, then the time entries newest first with
-/// their marks. Renaming, moving and deleting are rare, so they wait in the
-/// More menu. A subtask links back to its parent above its title.
+/// each field changed in place, then the subtasks, then the time entries
+/// newest first with their marks. Renaming, moving and deleting are rare,
+/// so they wait in the More menu. A subtask links back to its parent above
+/// its title.
 struct TaskDetailView: View {
     @State private var model: TaskDetailModel
     /// Changes when synced edits arrive, so the entries follow them.
     let revision: Int
+    /// Shows another task, for a subtask's row.
+    let onOpen: (String) -> Void
 
     @State private var sheet: EntryTimesSheet.Purpose?
     @State private var pendingDeletion: EntryItem?
     @State private var isRenaming = false
+    @State private var isAddingSubtask = false
     @State private var isMoving = false
     @State private var isConfirmingTaskDeletion = false
     @Environment(\.dismiss) private var dismiss
 
-    init(taskId: String, store: TrackdoStore, revision: Int) {
+    init(taskId: String, store: TrackdoStore, revision: Int, onOpen: @escaping (String) -> Void) {
         _model = State(initialValue: TaskDetailModel(taskId: taskId, store: store))
         self.revision = revision
+        self.onOpen = onOpen
     }
 
     var body: some View {
@@ -33,6 +38,7 @@ struct TaskDetailView: View {
                 Section {
                     TaskPlanningRows(model: model, task: task)
                 }
+                subtasksSection(task)
                 entriesSection
             }
         }
@@ -51,6 +57,12 @@ struct TaskDetailView: View {
         .sheet(isPresented: $isRenaming) {
             TaskTitleSheet("Rename Task", confirm: "Save", title: model.task?.title ?? "") { title throws(TitleIssue) in
                 try await model.rename(to: title)
+            }
+            .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $isAddingSubtask) {
+            TaskTitleSheet("New Subtask", confirm: "Add") { title throws(TitleIssue) in
+                try await model.addSubtask(title: title)
             }
             .presentationDetents([.medium, .large])
         }
@@ -173,6 +185,63 @@ struct TaskDetailView: View {
             Button("Delete", systemImage: "trash", role: .destructive) { isConfirmingTaskDeletion = true }
         } label: {
             Label("More", systemImage: "ellipsis")
+        }
+    }
+
+    /// Subtasks as rows like the list's, completed and timed in place, each
+    /// opening its own screen. Add Subtask closes the section, where the
+    /// list ends.
+    private func subtasksSection(_ task: TaskItem) -> some View {
+        Section {
+            ForEach(model.subtasks) { subtask in
+                TaskRow(item: subtask, totalMs: { model.totalMs(of: subtask, at: $0) }, showsMenu: false) { action in
+                    perform(action, on: subtask)
+                }
+                .listRowInsets(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
+                .listRowBackground(DadsColor.white)
+                .listRowSeparatorTint(DadsColor.gray420)
+            }
+            Button {
+                isAddingSubtask = true
+            } label: {
+                Label("Add Subtask", systemImage: "plus")
+                    .dadsFont(.dns16N130)
+                    .foregroundStyle(DadsColor.key900)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(.rect)
+            }
+            .listRowBackground(DadsColor.white)
+            .listRowSeparator(.hidden)
+        } header: {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Subtasks")
+                    .dadsFont(.std20B150)
+                    .foregroundStyle(DadsColor.gray900)
+                    .textCase(nil)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+                if task.subtaskCount > 0 {
+                    Text(verbatim: "\(task.doneSubtaskCount)/\(task.subtaskCount)")
+                        .dadsFont(.dns14N130)
+                        .monospacedDigit()
+                        .foregroundStyle(DadsColor.gray700)
+                        .accessibilityLabel(Text("\(task.doneSubtaskCount) of \(task.subtaskCount) subtasks done"))
+                }
+            }
+        }
+    }
+
+    private func perform(_ action: TaskRowAction, on subtask: TaskItem) {
+        switch action {
+        case .open:
+            onOpen(subtask.id)
+        case .toggleDone:
+            Task { subtask.isDone ? await model.reopen(subtask.id) : await model.complete(subtask.id) }
+        case .toggleTimer:
+            Task { subtask.isRunning ? await model.stopTimer() : await model.start(subtask.id) }
+        case .rename, .delete:
+            // Subtask rows have no menu; their own screen renames and deletes.
+            break
         }
     }
 
