@@ -114,3 +114,24 @@ public struct CalendarDay: Hashable, Comparable, Sendable {
         CalendarDate(year: UInt16(clamping: year), month: UInt8(clamping: month), day: UInt8(clamping: day))
     }
 }
+
+/// How a due date stands against today.
+public enum DueStatus: Equatable, Sendable {
+    case overdue
+    case today
+    /// Neither overdue nor due today; a done task is never overdue.
+    case upcoming
+
+    /// `nil` without a due date.
+    public init?(due: CalendarDay?, isDone: Bool, today: CalendarDay) {
+        guard let due else {
+            return nil
+        }
+        switch due {
+        case _ where isDone: self = .upcoming
+        case ..<today: self = .overdue
+        case today: self = .today
+        default: self = .upcoming
+        }
+    }
+}

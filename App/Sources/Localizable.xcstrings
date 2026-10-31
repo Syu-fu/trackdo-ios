@@ -4,6 +4,28 @@
     "" : {
       "shouldTranslate" : false
     },
+    "%@  %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@  %2$@"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
     "%@ is deleted on every device. This can’t be undone." : {
       "localizations" : {
         "ja" : {
@@ -20,6 +42,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ – 現在"
+          }
+        }
+      }
+    },
+    "%lld of %lld subtasks done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld subtasks done"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サブタスク%2$lld件中%1$lld件完了"
           }
         }
       }
@@ -254,6 +292,26 @@
         }
       }
     },
+    "Due %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期限 %@"
+          }
+        }
+      }
+    },
+    "Due today" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日が期限"
+          }
+        }
+      }
+    },
     "Duration" : {
       "localizations" : {
         "ja" : {
@@ -400,6 +458,26 @@
         }
       }
     },
+    "Has a note" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メモあり"
+          }
+        }
+      }
+    },
+    "High" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高"
+          }
+        }
+      }
+    },
     "Information" : {
       "localizations" : {
         "ja" : {
@@ -450,6 +528,26 @@
         }
       }
     },
+    "Low" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "低"
+          }
+        }
+      }
+    },
+    "Medium" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中"
+          }
+        }
+      }
+    },
     "More for %@" : {
       "localizations" : {
         "ja" : {
@@ -476,6 +574,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "新規タスク"
+          }
+        }
+      }
+    },
+    "No priority" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "なし"
           }
         }
       }
@@ -540,12 +648,32 @@
         }
       }
     },
+    "Overdue %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期限切れ %@"
+          }
+        }
+      }
+    },
     "Paused" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "一時停止中"
+          }
+        }
+      }
+    },
+    "Planned for %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@に予定"
           }
         }
       }
@@ -906,6 +1034,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "トークンを入力し直すまで同期は止まります。編集した内容はこの端末に残ります。"
+          }
+        }
+      }
+    },
+    "Tags: %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグ：%@"
           }
         }
       }

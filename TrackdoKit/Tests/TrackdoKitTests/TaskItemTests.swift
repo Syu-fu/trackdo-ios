@@ -42,3 +42,15 @@ import Testing
         #expect(TaskPriority.allCases.sorted() == [.none, .low, .medium, .high])
     }
 }
+
+extension TaskItemTests {
+    @Test func dueStatusComparesWithToday() {
+        let today = CalendarDay(year: 2026, month: 10, day: 25)
+
+        #expect(DueStatus(due: CalendarDay(year: 2026, month: 10, day: 24), isDone: false, today: today) == .overdue)
+        #expect(DueStatus(due: today, isDone: false, today: today) == .today)
+        #expect(DueStatus(due: CalendarDay(year: 2026, month: 10, day: 26), isDone: false, today: today) == .upcoming)
+        #expect(DueStatus(due: CalendarDay(year: 2026, month: 10, day: 24), isDone: true, today: today) == .upcoming)
+        #expect(DueStatus(due: nil, isDone: false, today: today) == nil)
+    }
+}

@@ -14,7 +14,8 @@ enum TaskRowAction {
 /// frequent, so each takes one tap: the checkbox on the leading side, as
 /// DADS places checkboxes, and the timer button. Renaming and deleting are
 /// rare, so they wait in the More menu, which also stands in for the swipe
-/// actions. Dense text keeps the row short so more tasks fit on screen.
+/// actions. Dense text keeps the row short so more tasks fit on screen;
+/// planning details share the time's line and truncate rather than wrap.
 /// The row holds buttons, so only the title and time open the task.
 struct TaskRow: View {
     let model: TaskListModel
@@ -70,11 +71,20 @@ struct TaskRow: View {
                     .foregroundStyle(item.isDone ? DadsColor.gray600 : DadsColor.gray900)
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     let ms = model.totalMs(of: item, at: context.date)
-                    Text(verbatim: ElapsedTime.clock(ms))
-                        .dadsFont(.dns14N130)
-                        .monospacedDigit()
-                        .foregroundStyle(DadsColor.gray700)
-                        .accessibilityLabel(Text("Total \(ElapsedTime.spoken(ms))"))
+                    let summary = TaskSummary(item: item, today: CalendarDay(context.date))
+                    let time = Text(verbatim: ElapsedTime.clock(ms)).monospacedDigit()
+                    Group {
+                        if let details = summary.text {
+                            Text("\(time)  \(details)")
+                        } else {
+                            time
+                        }
+                    }
+                    .lineLimit(1)
+                    .dadsFont(.dns14N130)
+                    .foregroundStyle(DadsColor.gray700)
+                    .accessibilityLabel(Text("Total \(ElapsedTime.spoken(ms))"))
+                    .accessibilityValue(Text(verbatim: summary.spoken))
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
