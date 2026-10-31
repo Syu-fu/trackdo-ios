@@ -111,24 +111,30 @@ reads owned value types published by a `@MainActor` `@Observable` model.
 - The app works on its own: it opens on the task list, and every edit is
   saved on the device. Sync is an optional setting reached from the list's
   toolbar.
-- The look follows the Digital Agency design system (DADS), and structure
-  and interaction follow Apple's Human Interface Guidelines: navigation bar
-  with a large title, toolbar actions, list swipe actions with the same
-  actions in a menu, sheets and confirmation dialogs.
-  `App/Sources/Design` holds the DADS tokens (from
-  `@digital-go-jp/design-tokens` 2.0.1) and the components the screens use:
-  buttons, form fields, chip labels, notification banners and the focus
-  indicator. DADS has no time picker, so dates and times use the system
-  compact `DatePicker` inside the DADS field layout. The
-  system font stands in for Noto Sans JP, and text sizes follow Dynamic Type.
-  DADS defines only a light palette, so the app sets `UIUserInterfaceStyle`
-  to `Light` for now.
+- Structure and interaction follow Apple's Human Interface Guidelines:
+  navigation bar with a large title, toolbar actions, list swipe actions
+  with the same actions in a menu, sheets and confirmation dialogs.
+  `App/Sources/Design` holds the colors and type sizes, taken from the
+  Digital Agency design system (DADS, `@digital-go-jp/design-tokens` 2.0.1),
+  and the shared pieces: buttons, form fields, chip labels, notification
+  banners, the focus indicator and a flow layout. New screens no longer
+  follow DADS component specs. Dates and times use the system compact
+  `DatePicker`. The system font stands in for Noto Sans JP, and text sizes
+  follow Dynamic Type. The palette is light only, so the app sets
+  `UIUserInterfaceStyle` to `Light` for now.
 - Controls are placed by how often they are used. Frequent actions take one
   tap and sit within the thumb's reach: the running timer with its Stop
   button and Add Task in the bottom toolbar, and a checkbox and a timer
-  button on every task row. Rare actions
-  such as renaming and deleting wait in a row's More menu and its swipe
-  actions. Task rows use DADS dense text so more of them fit on screen.
+  button on every task row and beside the title on the detail screen. Rare
+  actions such as renaming, moving and deleting wait in a More menu and in
+  swipe actions.
+- Rows say little in words. The round checkbox is tinted by priority (red
+  high, orange medium, blue low, gray none), as in Todoist. A due date is
+  just the date, red when overdue and a green Today. Tags are chips in a
+  color picked from the tag id, so it is the same on every device and kept
+  through renames. Details wrap onto more lines rather than being cut off,
+  and each row is read as one sentence that does say everything, priority
+  and tags included.
 - The app is in English and Japanese. Strings live in String Catalogs
   (`Localizable.xcstrings` and `InfoPlist.xcstrings`); the build extracts
   them from the code, and `scripts/check-localizations.sh` fails when the
@@ -139,21 +145,28 @@ reads owned value types published by a `@MainActor` `@Observable` model.
   `TaskDetailModel` and `SettingsEditor`, lives in `TrackdoKit`; views only
   lay it out.
 - The MVP has three screens:
-  - Task list: add, complete or reopen, rename, delete. Each row completes
-    or reopens its task with a checkbox, starts or stops a timer and shows
-    the task's total, counting up live. A one-line bar in the bottom
-    toolbar shows the running timer with a Stop button, and opens its task.
-  - Task detail, opened from a task's title: the total and the entries
-    newest first, with editing, deleting and adding past entries. Entries
-    that need fixing or were stopped automatically carry chip labels, and a
-    banner points to entries that need fixing.
+  - Task list: top-level tasks only, in creation order, with add, complete
+    or reopen, rename and delete. Each row completes or reopens its task
+    with a checkbox, starts or stops a timer, and shows the total counting
+    up live, then the due date, subtask progress, plan, a note mark and
+    tags. A one-line bar in the bottom toolbar shows the running timer with
+    a Stop button, and opens its task. Deleting a task deletes its
+    subtasks, and the confirmation says so.
+  - Task detail, opened from a task's title: a link to the parent for a
+    subtask, the checkbox, title, timer and total, then priority, due date,
+    plan, tags and note, each changed in place; empty fields take one tap
+    to add, and the note saves when editing leaves it. Tags are chosen in a
+    sheet that narrows them as a name is typed, adds the name when it is
+    new, and renames or deletes a tag behind a swipe. Subtasks follow as
+    rows like the list's, completed and timed in place and opening their
+    own detail, with Add Subtask at the end. Then the time entries newest
+    first, with editing, deleting and adding past entries; entries that
+    need fixing or were stopped automatically carry chip labels, and a
+    banner points to entries that need fixing. Rename, Move (to the top
+    level or under any task not below it) and Delete are in the More menu.
   - Settings: server URL, token, connection check and sync status.
 - Not in the MVP: reports, widgets, Live Activities, notifications, search,
-  iPad layouts.
-- Priorities, notes, due dates, scheduled times, subtasks and tags from
-  trackdo-core v0.4.0 are not shown or edited yet. Other clients' writes to
-  them are still merged, stored and synced, and a task below a deleted task
-  is hidden as deleted.
+  iPad layouts, choosing a tag's color (core tags carry no color).
 
 ## Testing and CI
 
