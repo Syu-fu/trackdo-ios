@@ -678,6 +678,16 @@
         }
       }
     },
+    "Priority: %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優先度：%@"
+          }
+        }
+      }
+    },
     "Reaching the server and catching up with your other devices." : {
       "localizations" : {
         "ja" : {
@@ -1274,6 +1284,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "未完了"
+          }
+        }
+      }
+    },
+    "Today" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "今日"
           }
         }
       }

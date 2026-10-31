@@ -11,8 +11,8 @@ enum TaskRowAction {
 
 /// One task in the DADS resource list style (components/resource-list),
 /// laid out by how often each part is used. Completing and timing are
-/// frequent, so each takes one tap: the checkbox on the leading side, as
-/// DADS places checkboxes, and the timer button. Renaming and deleting are
+/// frequent, so each takes one tap: the checkbox on the leading side, tinted
+/// by priority, and the timer button. Renaming and deleting are
 /// rare, so they wait in the More menu, which also stands in for the swipe
 /// actions. Dense text keeps the row short so more tasks fit on screen;
 /// planning details share the time's line and truncate rather than wrap.
@@ -49,11 +49,9 @@ struct TaskRow: View {
         Button {
             onAction(.toggleDone)
         } label: {
-            Image(systemName: item.isDone ? "checkmark.square.fill" : "square")
-                .font(.title2)
-                .foregroundStyle(item.isDone ? DadsColor.key900 : DadsColor.gray600)
+            EmptyView()
         }
-        .buttonStyle(CheckboxButtonStyle())
+        .buttonStyle(CheckboxButtonStyle(priority: item.priority, isDone: item.isDone))
         .accessibilityLabel(item.isDone
             ? Text("Reopen \(item.displayTitle)")
             : Text("Complete \(item.displayTitle)"))
@@ -134,12 +132,14 @@ struct TaskRow: View {
     }
 }
 
-/// The checkbox's 44 pt target, dimmed while pressed.
+/// The checkbox's 44 pt target, previewing the check while pressed.
 private struct CheckboxButtonStyle: ButtonStyle {
+    let priority: TaskPriority
+    let isDone: Bool
+
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
+        PriorityCheckbox(priority: priority, isDone: isDone, isPressed: configuration.isPressed)
             .frame(width: 44, height: 44)
             .contentShape(.rect)
-            .opacity(configuration.isPressed ? 0.5 : 1)
     }
 }

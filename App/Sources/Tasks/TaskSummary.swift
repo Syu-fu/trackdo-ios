@@ -2,10 +2,11 @@ import SwiftUI
 import TrackdoKit
 
 /// What a task carries beyond its title, in one dense line for its row:
-/// priority, due date, subtask progress, schedule, tags and a note mark,
-/// most telling first since the line truncates.
-/// Each part pairs a symbol with text, so color is never the only cue, and
-/// the line is read as one sentence.
+/// due date, subtask progress, schedule, tags and a note mark, most telling
+/// first since the line truncates. Words are kept few: priority shows only
+/// as the checkbox's color, and a due date is just the date, colored when
+/// it is today or past. The line is read as one sentence that does say all
+/// of it, priority included.
 struct TaskSummary {
     let item: TaskItem
     let today: CalendarDay
@@ -13,12 +14,12 @@ struct TaskSummary {
     /// One `Text` so the line truncates as a whole; `nil` when there is
     /// nothing to show.
     var text: Text? {
-        let parts = parts
+        let parts = parts.compactMap(\.text)
         guard let first = parts.first else {
             return nil
         }
-        return parts.dropFirst().reduce(first.text) { line, part in
-            Text("\(line)  \(part.text)")
+        return parts.dropFirst().reduce(first) { line, part in
+            Text("\(line)  \(part)")
         }
     }
 
@@ -27,7 +28,8 @@ struct TaskSummary {
     }
 
     private struct Part {
-        let text: Text
+        /// `nil` for what the row shows some other way.
+        let text: Text?
         let spoken: String
     }
 
@@ -39,8 +41,7 @@ struct TaskSummary {
         guard item.priority != .none else {
             return nil
         }
-        let color = item.priority == .high ? DadsColor.red900 : DadsColor.gray700
-        return part("flag.fill", String(localized: item.priority.label), color: color)
+        return Part(text: nil, spoken: String(localized: "Priority: \(String(localized: item.priority.label))"))
     }
 
     private var due: Part? {
@@ -49,9 +50,9 @@ struct TaskSummary {
         }
         let date = due.date().formatted(.dateTime.month(.defaultDigits).day())
         return switch status {
-        case .overdue: part("calendar", String(localized: "Overdue \(date)"), color: DadsColor.red900)
-        case .today: part("calendar", String(localized: "Due today"), color: DadsColor.red900)
-        case .upcoming: part("calendar", String(localized: "Due \(date)"))
+        case .overdue: part("calendar", date, spoken: String(localized: "Overdue \(date)"), color: DadsColor.red900)
+        case .today: part("calendar", String(localized: "Today"), spoken: String(localized: "Due today"), color: DadsColor.success2)
+        case .upcoming: part("calendar", date, spoken: String(localized: "Due \(date)"))
         }
     }
 
