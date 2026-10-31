@@ -108,4 +108,20 @@ import Testing
         #expect(model.issue == .tagGone)
         #expect(model.tags.isEmpty)
     }
+
+    @Test func typingNarrowsTheTagsAndTellsWhetherTheNameIsNew() async throws {
+        let id = try await store.create(title: "Report")
+        let work = try await store.createTag(name: "Work")
+        let homework = try await store.createTag(name: "homework")
+        _ = try await store.createTag(name: "errands")
+        let model = await makeModel(for: id)
+
+        #expect(model.tags(matching: "").count == 3)
+        #expect(model.tags(matching: " work ").map(\.id) == [work, homework])
+        #expect(model.isNew(" Work ") == false)
+        // Names are compared exactly, so this one would be a new tag.
+        #expect(model.isNew("work") == true)
+        #expect(model.isNew("wor") == true)
+        #expect(model.isNew("  ") == false)
+    }
 }

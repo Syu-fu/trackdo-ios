@@ -2,19 +2,21 @@ import SwiftUI
 import TrackdoKit
 
 /// A task's planning on its detail screen, one row each: priority, due
-/// date, schedule and note. Every change is saved as it is made; the note
+/// date, schedule, tags and note. Every change is saved as it is made; the note
 /// is saved when editing leaves it. Fields left empty take one tap to add.
 struct TaskPlanningRows: View {
     let model: TaskDetailModel
     let task: TaskItem
+    let onEditTags: () -> Void
 
     @State private var note: String
     @State private var noteIssue: NoteIssue?
     @FocusState private var isEditingNote: Bool
 
-    init(model: TaskDetailModel, task: TaskItem) {
+    init(model: TaskDetailModel, task: TaskItem, onEditTags: @escaping () -> Void) {
         self.model = model
         self.task = task
+        self.onEditTags = onEditTags
         _note = State(initialValue: task.note ?? "")
     }
 
@@ -23,6 +25,7 @@ struct TaskPlanningRows: View {
             priorityRow
             dueRow
             scheduleRow
+            tagsRow
             noteRow
         }
         // Each row's 44 pt targets carry their own space.
@@ -89,6 +92,37 @@ struct TaskPlanningRows: View {
                 }
             }
         }
+    }
+
+    /// The chips themselves, the whole row opening the tag sheet.
+    private var tagsRow: some View {
+        Button(action: onEditTags) {
+            HStack(alignment: .top) {
+                PlanningLabel("Tags", systemImage: "tag")
+                Spacer()
+                if task.tags.isEmpty {
+                    Text("Add")
+                        .foregroundStyle(DadsColor.key900)
+                        .frame(minWidth: 44, minHeight: 44)
+                } else {
+                    FlowLayout(spacing: 6, lineSpacing: 6) {
+                        ForEach(task.tags) { TagChip(tag: $0) }
+                    }
+                    .padding(.vertical, 12)
+                    // Ends where the other rows' text does.
+                    .padding(.trailing, 6)
+                }
+            }
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Tags"))
+        .accessibilityValue(task.tags.isEmpty
+            ? Text("None")
+            : Text(verbatim: task.tags.map(\.name).formatted(.list(type: .and))))
+        .accessibilityHint(Text("Chooses the task’s tags."))
+        .accessibilityAddTraits(.isButton)
     }
 
     private var noteRow: some View {

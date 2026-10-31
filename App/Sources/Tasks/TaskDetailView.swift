@@ -9,6 +9,7 @@ import TrackdoKit
 /// its title.
 struct TaskDetailView: View {
     @State private var model: TaskDetailModel
+    private let store: TrackdoStore
     /// Changes when synced edits arrive, so the entries follow them.
     let revision: Int
     /// Shows another task, for a subtask's row.
@@ -18,12 +19,14 @@ struct TaskDetailView: View {
     @State private var pendingDeletion: EntryItem?
     @State private var isRenaming = false
     @State private var isAddingSubtask = false
+    @State private var isEditingTags = false
     @State private var isMoving = false
     @State private var isConfirmingTaskDeletion = false
     @Environment(\.dismiss) private var dismiss
 
     init(taskId: String, store: TrackdoStore, revision: Int, onOpen: @escaping (String) -> Void) {
         _model = State(initialValue: TaskDetailModel(taskId: taskId, store: store))
+        self.store = store
         self.revision = revision
         self.onOpen = onOpen
     }
@@ -36,7 +39,7 @@ struct TaskDetailView: View {
                     .listRowSeparator(.hidden)
                     .listRowBackground(DadsColor.white)
                 Section {
-                    TaskPlanningRows(model: model, task: task)
+                    TaskPlanningRows(model: model, task: task) { isEditingTags = true }
                 }
                 subtasksSection(task)
                 entriesSection
@@ -59,6 +62,9 @@ struct TaskDetailView: View {
                 try await model.rename(to: title)
             }
             .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $isEditingTags, onDismiss: { Task { await model.reload() } }) {
+            TaskTagsSheet(taskId: model.taskId, store: store)
         }
         .sheet(isPresented: $isAddingSubtask) {
             TaskTitleSheet("New Subtask", confirm: "Add") { title throws(TitleIssue) in

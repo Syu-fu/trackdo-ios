@@ -101,6 +101,16 @@
         }
       }
     },
+    "Add Tag %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグ「%@」を追加"
+          }
+        }
+      }
+    },
     "Add Task" : {
       "localizations" : {
         "ja" : {
@@ -127,6 +137,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "取り組むことを追加して、タイマーを開始しましょう。タスクはこの端末に保存されます。ほかの端末でも使うには、同期を設定してください。"
+          }
+        }
+      }
+    },
+    "Another tag already has this name." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "同じ名前のタグがすでにあります。"
           }
         }
       }
@@ -201,6 +221,16 @@
         }
       }
     },
+    "Chooses the task’s tags." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクのタグを選びます。"
+          }
+        }
+      }
+    },
     "Complete" : {
       "localizations" : {
         "ja" : {
@@ -251,12 +281,32 @@
         }
       }
     },
+    "Delete Tag" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグを削除"
+          }
+        }
+      }
+    },
     "Delete Task" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "タスクを削除"
+          }
+        }
+      }
+    },
+    "Delete this tag?" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このタグを削除しますか？"
           }
         }
       }
@@ -381,6 +431,16 @@
         }
       }
     },
+    "Enter a tag name." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグの名前を入力してください。"
+          }
+        }
+      }
+    },
     "Enter a title." : {
       "localizations" : {
         "ja" : {
@@ -437,6 +497,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "エラー"
+          }
+        }
+      }
+    },
+    "Find or Add a Tag" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグを検索・追加"
           }
         }
       }
@@ -547,6 +617,16 @@
         }
       }
     },
+    "Keep the tag name on one line." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグの名前は1行にしてください。"
+          }
+        }
+      }
+    },
     "Keep the title on one line." : {
       "localizations" : {
         "ja" : {
@@ -617,6 +697,16 @@
         }
       }
     },
+    "Name" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名前"
+          }
+        }
+      }
+    },
     "Needs Fixing" : {
       "localizations" : {
         "ja" : {
@@ -673,6 +763,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "まだ記録がありません。タイマーを開始するか、過去の作業を追加してください。"
+          }
+        }
+      }
+    },
+    "None" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "なし"
           }
         }
       }
@@ -887,6 +987,16 @@
         }
       }
     },
+    "Rename Tag" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグの名前を変更"
+          }
+        }
+      }
+    },
     "Rename Task" : {
       "localizations" : {
         "ja" : {
@@ -1003,6 +1113,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "メモを%lld文字以内にしてください。"
+          }
+        }
+      }
+    },
+    "Shorten the tag name to %lld characters or fewer." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグの名前を%lld文字以内にしてください。"
           }
         }
       }
@@ -1213,6 +1333,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "トークンを入力し直すまで同期は止まります。編集した内容はこの端末に残ります。"
+          }
+        }
+      }
+    },
+    "Tags" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タグ"
           }
         }
       }
@@ -1683,6 +1813,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "「%@」とその記録は、すべての端末から削除されます。元に戻すことはできません。"
+          }
+        }
+      }
+    },
+    "“%@” is taken off every task on every device. This can’t be undone." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」は、すべての端末のすべてのタスクから外されます。元に戻すことはできません。"
           }
         }
       }

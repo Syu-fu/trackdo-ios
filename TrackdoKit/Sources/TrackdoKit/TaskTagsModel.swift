@@ -46,6 +46,23 @@ public final class TaskTagsModel {
         selected = Set(task?.tags.map(\.id) ?? [])
     }
 
+    /// The tags whose names contain `query`, ignoring case and the spaces
+    /// around it; every tag when it is blank.
+    public func tags(matching query: String) -> [TagItem] {
+        let query = query.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else {
+            return tags
+        }
+        return tags.filter { $0.name.localizedStandardContains(query) }
+    }
+
+    /// Whether creating `name` would make a new tag. Core compares names
+    /// exactly, after trimming.
+    public func isNew(_ name: String) -> Bool {
+        let name = name.trimmingCharacters(in: .whitespaces)
+        return !name.isEmpty && !tags.contains { $0.name == name }
+    }
+
     /// Puts the tag on the task or takes it off.
     public func toggle(_ tagId: String) async {
         let isSelected = selected.contains(tagId)

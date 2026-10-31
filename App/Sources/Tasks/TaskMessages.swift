@@ -47,6 +47,17 @@ extension TaskItem {
     }
 }
 
+extension TagNameIssue {
+    var message: LocalizedStringResource {
+        switch self {
+        case .empty: "Enter a tag name."
+        case .containsLineBreak: "Keep the tag name on one line."
+        case let .tooLong(max): "Shorten the tag name to \(max) characters or fewer."
+        case .taken: "Another tag already has this name."
+        }
+    }
+}
+
 extension NoteIssue {
     var message: LocalizedStringResource {
         switch self {
