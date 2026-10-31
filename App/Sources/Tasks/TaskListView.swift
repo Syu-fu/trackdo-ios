@@ -7,6 +7,19 @@ enum TaskRoute: Hashable {
     case sync
 }
 
+/// What the list asks a title for.
+private enum TitleSheet: Identifiable {
+    case add
+    case rename(TaskItem)
+
+    var id: String {
+        switch self {
+        case .add: "add"
+        case let .rename(item): "rename-\(item.id)"
+        }
+    }
+}
+
 /// The app's home: every task, Sync settings in the navigation bar, and the
 /// running timer and Add Task at the bottom. Everything works without a
 /// server.
@@ -17,7 +30,7 @@ struct TaskListView: View {
     let syncStatus: SyncStatusModel
 
     @State private var path: [TaskRoute] = []
-    @State private var sheet: TaskTitleSheet.Purpose?
+    @State private var sheet: TitleSheet?
     @State private var pendingDeletion: TaskItem?
 
     var body: some View {
@@ -73,8 +86,19 @@ struct TaskListView: View {
             }
         }
         .sheet(item: $sheet) { purpose in
-            TaskTitleSheet(model: model, purpose: purpose)
-                .presentationDetents([.medium, .large])
+            Group {
+                switch purpose {
+                case .add:
+                    TaskTitleSheet("New Task", confirm: "Add") { title throws(TitleIssue) in
+                        try await model.add(title: title)
+                    }
+                case let .rename(item):
+                    TaskTitleSheet("Rename Task", confirm: "Save", title: item.title ?? "") { title throws(TitleIssue) in
+                        try await model.rename(item.id, to: title)
+                    }
+                }
+            }
+            .presentationDetents([.medium, .large])
         }
         .confirmationDialog(
             "Delete this task?",
@@ -86,7 +110,7 @@ struct TaskListView: View {
                 Task { await model.delete(item.id) }
             }
         } message: { item in
-            Text("“\(item.displayTitle)” and its time entries are deleted on every device. This can’t be undone.")
+            item.deletionMessage
         }
         .onChange(of: model.issue) { _, issue in
             if let issue {

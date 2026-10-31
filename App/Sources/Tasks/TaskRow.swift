@@ -47,15 +47,9 @@ struct TaskRow: View {
     }
 
     private var doneButton: some View {
-        Button {
+        CheckboxButton(priority: item.priority, isDone: item.isDone, title: item.displayTitle) {
             onAction(.toggleDone)
-        } label: {
-            EmptyView()
         }
-        .buttonStyle(CheckboxButtonStyle(priority: item.priority, isDone: item.isDone))
-        .accessibilityLabel(item.isDone
-            ? Text("Reopen \(item.displayTitle)")
-            : Text("Complete \(item.displayTitle)"))
     }
 
     private var contents: some View {
@@ -92,28 +86,9 @@ struct TaskRow: View {
         .accessibilityHint(Text("Shows its time entries."))
     }
 
-    /// A ring as light as the checkbox while idle, so it does not outweigh
-    /// the title; filled with the key color while running, the one state
-    /// worth catching the eye.
-    @ViewBuilder private var timerButton: some View {
-        if item.isRunning {
-            Button {
-                Task { await model.stop() }
-            } label: {
-                Image(systemName: "stop.circle.fill")
-                    .foregroundStyle(DadsColor.key900)
-            }
-            .buttonStyle(TimerButtonStyle())
-            .accessibilityLabel(Text("Stop timer for \(item.displayTitle)"))
-        } else {
-            Button {
-                Task { await model.start(item.id) }
-            } label: {
-                Image(systemName: "play.circle")
-                    .foregroundStyle(DadsColor.gray600)
-            }
-            .buttonStyle(TimerButtonStyle())
-            .accessibilityLabel(Text("Start timer for \(item.displayTitle)"))
+    private var timerButton: some View {
+        TimerButton(isRunning: item.isRunning, title: item.displayTitle) {
+            Task { item.isRunning ? await model.stop() : await model.start(item.id) }
         }
     }
 
@@ -130,28 +105,5 @@ struct TaskRow: View {
                 .contentShape(.rect)
         }
         .accessibilityLabel(Text("More for \(item.displayTitle)"))
-    }
-}
-
-/// The timer button's 44 pt target, dimmed while pressed.
-private struct TimerButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 26, weight: .light))
-            .frame(width: 44, height: 44)
-            .contentShape(.rect)
-            .opacity(configuration.isPressed ? 0.5 : 1)
-    }
-}
-
-/// The checkbox's 44 pt target, previewing the check while pressed.
-private struct CheckboxButtonStyle: ButtonStyle {
-    let priority: TaskPriority
-    let isDone: Bool
-
-    func makeBody(configuration: Configuration) -> some View {
-        PriorityCheckbox(priority: priority, isDone: isDone, isPressed: configuration.isPressed)
-            .frame(width: 44, height: 44)
-            .contentShape(.rect)
     }
 }

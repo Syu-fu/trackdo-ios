@@ -46,3 +46,31 @@ extension TaskPriority {
         }
     }
 }
+
+/// The checkbox as a button with a 44 pt target, previewing the check
+/// while pressed.
+struct CheckboxButton: View {
+    let priority: TaskPriority
+    let isDone: Bool
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            EmptyView()
+        }
+        .buttonStyle(Style(priority: priority, isDone: isDone))
+        .accessibilityLabel(isDone ? Text("Reopen \(title)") : Text("Complete \(title)"))
+    }
+
+    private struct Style: ButtonStyle {
+        let priority: TaskPriority
+        let isDone: Bool
+
+        func makeBody(configuration: Configuration) -> some View {
+            PriorityCheckbox(priority: priority, isDone: isDone, isPressed: configuration.isPressed)
+                .frame(width: 44, height: 44)
+                .contentShape(.rect)
+        }
+    }
+}

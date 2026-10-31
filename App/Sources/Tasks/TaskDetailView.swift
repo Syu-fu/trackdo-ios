@@ -1,8 +1,11 @@
 import SwiftUI
 import TrackdoKit
 
-/// One task's time entries: the total, the entries newest first with their
-/// marks, and editing, deleting and adding past work.
+/// One task in full. Completing and timing are frequent, so the checkbox
+/// and timer button sit beside the title, one tap each. Planning follows,
+/// each field changed in place, then the time entries newest first with
+/// their marks. Renaming, moving and deleting are rare, so they wait in the
+/// More menu. A subtask links back to its parent above its title.
 struct TaskDetailView: View {
     @State private var model: TaskDetailModel
     /// Changes when synced edits arrive, so the entries follow them.
@@ -10,6 +13,10 @@ struct TaskDetailView: View {
 
     @State private var sheet: EntryTimesSheet.Purpose?
     @State private var pendingDeletion: EntryItem?
+    @State private var isRenaming = false
+    @State private var isMoving = false
+    @State private var isConfirmingTaskDeletion = false
+    @Environment(\.dismiss) private var dismiss
 
     init(taskId: String, store: TrackdoStore, revision: Int) {
         _model = State(initialValue: TaskDetailModel(taskId: taskId, store: store))
@@ -20,9 +27,12 @@ struct TaskDetailView: View {
         List {
             banners
             if let task = model.task {
-                summary(task)
+                header(task)
                     .listRowSeparator(.hidden)
                     .listRowBackground(DadsColor.white)
+                Section {
+                    TaskPlanningRows(model: model, task: task)
+                }
                 entriesSection
             }
         }
@@ -34,9 +44,33 @@ struct TaskDetailView: View {
         .toolbar {
             if model.task != nil {
                 ToolbarItem(placement: .primaryAction) {
-                    Button("Add Past Entry", systemImage: "plus") { sheet = .add }
+                    moreMenu
                 }
             }
+        }
+        .sheet(isPresented: $isRenaming) {
+            TaskTitleSheet("Rename Task", confirm: "Save", title: model.task?.title ?? "") { title throws(TitleIssue) in
+                try await model.rename(to: title)
+            }
+            .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $isMoving) {
+            MoveTaskSheet(model: model)
+        }
+        .confirmationDialog(
+            "Delete this task?",
+            isPresented: $isConfirmingTaskDeletion,
+            titleVisibility: .visible,
+            presenting: model.task
+        ) { _ in
+            Button("Delete Task", role: .destructive) {
+                Task {
+                    await model.delete()
+                    dismiss()
+                }
+            }
+        } message: { task in
+            task.deletionMessage
         }
         .sheet(item: $sheet) { purpose in
             EntryTimesSheet(model: model, purpose: purpose)
@@ -88,38 +122,58 @@ struct TaskDetailView: View {
         }
     }
 
-    /// Title and total, as a DADS heading and description list.
-    private func summary(_ task: TaskItem) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(verbatim: task.displayTitle)
-                .dadsFont(.std24B150)
-                .foregroundStyle(DadsColor.gray900)
-                .accessibilityAddTraits(.isHeader)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Total")
-                    .dadsFont(.std16B170)
-                    .foregroundStyle(DadsColor.gray800)
-                TimelineView(.periodic(from: .now, by: 1)) { context in
-                    let ms = model.totalMs(at: context.date)
-                    Text(verbatim: ElapsedTime.clock(ms))
-                        .dadsFont(.std20B150)
-                        .monospacedDigit()
-                        .foregroundStyle(DadsColor.gray900)
-                        .accessibilityLabel(Text(verbatim: ElapsedTime.spoken(ms)))
+    /// The parent link, then the checkbox, title and timer, then the total.
+    private func header(_ task: TaskItem) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let parent = model.parent {
+                NavigationLink(value: TaskRoute.task(parent.id)) {
+                    Label(parent.displayTitle, systemImage: "arrow.turn.left.up")
+                        .lineLimit(1)
+                        .dadsFont(.dns14N130)
+                        .foregroundStyle(DadsColor.gray700)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Part of \(parent.displayTitle)"))
+                .accessibilityHint(Text("Shows the parent task."))
+            }
+            HStack(alignment: .top, spacing: 4) {
+                CheckboxButton(priority: task.priority, isDone: task.isDone, title: task.displayTitle) {
+                    Task { task.isDone ? await model.reopen(task.id) : await model.complete(task.id) }
+                }
+                Text(verbatim: task.displayTitle)
+                    .strikethrough(task.isDone)
+                    .dadsFont(.std24B150)
+                    .foregroundStyle(task.isDone ? DadsColor.gray600 : DadsColor.gray900)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityValue(task.isDone ? Text("Done") : Text(verbatim: ""))
+                TimerButton(isRunning: task.isRunning, title: task.displayTitle) {
+                    Task { task.isRunning ? await model.stopTimer() : await model.start(task.id) }
                 }
             }
-            .accessibilityElement(children: .combine)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Status")
-                    .dadsFont(.std16B170)
-                    .foregroundStyle(DadsColor.gray800)
-                Text(task.isRunning ? "Timer running" : task.isDone ? "Done" : "To do")
-                    .dadsFont(.std16N170)
-                    .foregroundStyle(DadsColor.gray900)
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                let ms = model.totalMs(at: context.date)
+                Text("Total \(Text(verbatim: ElapsedTime.clock(ms)).monospacedDigit())")
+                    .dadsFont(.dns16N130)
+                    .foregroundStyle(DadsColor.gray700)
+                    .accessibilityLabel(Text("Total \(ElapsedTime.spoken(ms))"))
             }
-            .accessibilityElement(children: .combine)
+            .padding(.leading, 48)
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, 8)
+    }
+
+    /// Rare actions on the task itself.
+    private var moreMenu: some View {
+        Menu {
+            Button("Rename", systemImage: "pencil") { isRenaming = true }
+            Button("Move", systemImage: "arrow.up.and.down.and.arrow.left.and.right") { isMoving = true }
+            Divider()
+            Button("Delete", systemImage: "trash", role: .destructive) { isConfirmingTaskDeletion = true }
+        } label: {
+            Label("More", systemImage: "ellipsis")
+        }
     }
 
     @ViewBuilder private var entriesSection: some View {
@@ -145,17 +199,29 @@ struct TaskDetailView: View {
                     }
             }
         } header: {
-            Text("Time Entries")
-                .dadsFont(.std20B150)
-                .foregroundStyle(DadsColor.gray900)
-                .textCase(nil)
-                .accessibilityAddTraits(.isHeader)
+            HStack {
+                Text("Time Entries")
+                    .dadsFont(.std20B150)
+                    .foregroundStyle(DadsColor.gray900)
+                    .textCase(nil)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+                Button {
+                    sheet = .add
+                } label: {
+                    Image(systemName: "plus")
+                        .frame(width: 44, height: 44)
+                        .contentShape(.rect)
+                }
+                .tint(DadsColor.key900)
+                .accessibilityLabel(Text("Add Past Entry"))
+            }
         }
     }
 
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("No time recorded yet. Start the timer from the task list, or add work you did earlier.")
+            Text("No time recorded yet. Start the timer, or add work you did earlier.")
                 .dadsFont(.std16N170)
                 .foregroundStyle(DadsColor.gray800)
             Button {

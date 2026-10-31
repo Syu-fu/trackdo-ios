@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 import TrackdoKit
 
 extension TitleIssue {
@@ -35,6 +35,23 @@ extension TaskItem {
     /// A task whose title has not arrived from the server yet.
     var displayTitle: String {
         title ?? String(localized: "Untitled task")
+    }
+}
+
+extension TaskItem {
+    /// Deleting a task takes its subtasks along, so the confirmation says so.
+    var deletionMessage: Text {
+        subtaskCount > 0
+            ? Text("“\(displayTitle)”, its subtasks and all their time entries are deleted on every device. This can’t be undone.")
+            : Text("“\(displayTitle)” and its time entries are deleted on every device. This can’t be undone.")
+    }
+}
+
+extension NoteIssue {
+    var message: LocalizedStringResource {
+        switch self {
+        case let .tooLong(max): "Shorten the note to \(max) characters or fewer."
+        }
     }
 }
 

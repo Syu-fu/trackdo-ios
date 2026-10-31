@@ -71,6 +71,16 @@
         }
       }
     },
+    "Add Due Date" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期限を追加"
+          }
+        }
+      }
+    },
     "Add Past Entry" : {
       "localizations" : {
         "ja" : {
@@ -87,6 +97,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "タスクを追加"
+          }
+        }
+      }
+    },
+    "Add a note" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メモを追加"
           }
         }
       }
@@ -287,6 +307,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "期限 %@"
+          }
+        }
+      }
+    },
+    "Due Date" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期限"
           }
         }
       }
@@ -537,12 +567,42 @@
         }
       }
     },
+    "More" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "その他"
+          }
+        }
+      }
+    },
     "More for %@" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@のその他の操作"
+          }
+        }
+      }
+    },
+    "Move" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移動"
+          }
+        }
+      }
+    },
+    "Move Task" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクを移動"
           }
         }
       }
@@ -587,12 +647,12 @@
         }
       }
     },
-    "No time recorded yet. Start the timer from the task list, or add work you did earlier." : {
+    "No time recorded yet. Start the timer, or add work you did earlier." : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "まだ記録がありません。タスク一覧からタイマーを開始するか、過去の作業を追加してください。"
+            "value" : "まだ記録がありません。タイマーを開始するか、過去の作業を追加してください。"
           }
         }
       }
@@ -603,6 +663,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "同期していません"
+          }
+        }
+      }
+    },
+    "Note" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メモ"
           }
         }
       }
@@ -647,6 +717,16 @@
         }
       }
     },
+    "Part of %@" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@のサブタスク"
+          }
+        }
+      }
+    },
     "Paused" : {
       "localizations" : {
         "ja" : {
@@ -657,12 +737,42 @@
         }
       }
     },
+    "Plan a Time" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "予定を追加"
+          }
+        }
+      }
+    },
+    "Planned For" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "予定"
+          }
+        }
+      }
+    },
     "Planned for %@" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@に予定"
+          }
+        }
+      }
+    },
+    "Priority" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優先度"
           }
         }
       }
@@ -683,6 +793,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "サーバに接続し、ほかの端末での変更を取り込んでいます。"
+          }
+        }
+      }
+    },
+    "Remove Due Date" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "期限を削除"
+          }
+        }
+      }
+    },
+    "Remove Plan" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "予定を削除"
           }
         }
       }
@@ -847,6 +977,16 @@
         }
       }
     },
+    "Shorten the note to %lld characters or fewer." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "メモを%lld文字以内にしてください。"
+          }
+        }
+      }
+    },
     "Shorten the title to %lld characters or fewer." : {
       "localizations" : {
         "ja" : {
@@ -863,6 +1003,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "記録を表示します。"
+          }
+        }
+      }
+    },
+    "Shows the parent task." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "親タスクを表示します。"
           }
         }
       }
@@ -1267,16 +1417,6 @@
         }
       }
     },
-    "To do" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未完了"
-          }
-        }
-      }
-    },
     "Today" : {
       "localizations" : {
         "ja" : {
@@ -1297,12 +1437,12 @@
         }
       }
     },
-    "Total" : {
+    "Top Level" : {
       "localizations" : {
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "合計"
+            "value" : "最上位"
           }
         }
       }
@@ -1333,6 +1473,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "もう一度お試しください。繰り返し起きる場合は、端末を再起動してください。（%@）"
+          }
+        }
+      }
+    },
+    "Under a Task" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "タスクの下"
           }
         }
       }
@@ -1503,6 +1653,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "「%@」とその記録は、すべての端末から削除されます。元に戻すことはできません。"
+          }
+        }
+      }
+    },
+    "“%@”, its subtasks and all their time entries are deleted on every device. This can’t be undone." : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」とそのサブタスク、それらの記録は、すべての端末から削除されます。元に戻すことはできません。"
           }
         }
       }
