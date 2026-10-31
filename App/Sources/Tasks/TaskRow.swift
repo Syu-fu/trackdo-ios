@@ -15,8 +15,9 @@ enum TaskRowAction {
 /// by priority, and the timer button. Renaming and deleting are
 /// rare, so they wait in the More menu, which also stands in for the swipe
 /// actions. Dense text keeps the row short so more tasks fit on screen;
-/// planning details share the time's line and truncate rather than wrap.
-/// The row holds buttons, so only the title and time open the task.
+/// planning details follow the time and wrap onto more lines rather than
+/// being cut off. The row holds buttons, so only the title and details open
+/// the task.
 struct TaskRow: View {
     let model: TaskListModel
     let item: TaskItem
@@ -28,7 +29,7 @@ struct TaskRow: View {
         let layout = dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
             : AnyLayout(HStackLayout(spacing: 8))
-        HStack(spacing: 4) {
+        HStack(alignment: .top, spacing: 4) {
             doneButton
             layout {
                 contents
@@ -70,17 +71,14 @@ struct TaskRow: View {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     let ms = model.totalMs(of: item, at: context.date)
                     let summary = TaskSummary(item: item, today: CalendarDay(context.date))
-                    let time = Text(verbatim: ElapsedTime.clock(ms)).monospacedDigit()
-                    Group {
-                        if let details = summary.text {
-                            Text("\(time)  \(details)")
-                        } else {
-                            time
-                        }
+                    FlowLayout(spacing: 10, lineSpacing: 2) {
+                        Text(verbatim: ElapsedTime.clock(ms)).monospacedDigit()
+                        ForEach(Array(summary.texts.enumerated()), id: \.offset) { $0.element }
+                        ForEach(item.tags) { TagChip(tag: $0) }
                     }
-                    .lineLimit(1)
                     .dadsFont(.dns14N130)
                     .foregroundStyle(DadsColor.gray700)
+                    .accessibilityElement(children: .ignore)
                     .accessibilityLabel(Text("Total \(ElapsedTime.spoken(ms))"))
                     .accessibilityValue(Text(verbatim: summary.spoken))
                 }
@@ -94,24 +92,27 @@ struct TaskRow: View {
         .accessibilityHint(Text("Shows its time entries."))
     }
 
+    /// A ring as light as the checkbox while idle, so it does not outweigh
+    /// the title; filled with the key color while running, the one state
+    /// worth catching the eye.
     @ViewBuilder private var timerButton: some View {
         if item.isRunning {
             Button {
                 Task { await model.stop() }
             } label: {
-                Label("Stop", systemImage: "stop.fill")
-                    .labelStyle(.iconOnly)
+                Image(systemName: "stop.circle.fill")
+                    .foregroundStyle(DadsColor.key900)
             }
-            .buttonStyle(.dads(.solidFill, size: .icon))
+            .buttonStyle(TimerButtonStyle())
             .accessibilityLabel(Text("Stop timer for \(item.displayTitle)"))
         } else {
             Button {
                 Task { await model.start(item.id) }
             } label: {
-                Label("Start", systemImage: "play.fill")
-                    .labelStyle(.iconOnly)
+                Image(systemName: "play.circle")
+                    .foregroundStyle(DadsColor.gray600)
             }
-            .buttonStyle(.dads(.outline, size: .icon))
+            .buttonStyle(TimerButtonStyle())
             .accessibilityLabel(Text("Start timer for \(item.displayTitle)"))
         }
     }
@@ -129,6 +130,17 @@ struct TaskRow: View {
                 .contentShape(.rect)
         }
         .accessibilityLabel(Text("More for \(item.displayTitle)"))
+    }
+}
+
+/// The timer button's 44 pt target, dimmed while pressed.
+private struct TimerButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 26, weight: .light))
+            .frame(width: 44, height: 44)
+            .contentShape(.rect)
+            .opacity(configuration.isPressed ? 0.5 : 1)
     }
 }
 

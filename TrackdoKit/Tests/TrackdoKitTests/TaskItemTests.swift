@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TrackdoFFI
 @testable import TrackdoKit
 
 @Suite struct TaskItemTests {
@@ -52,5 +53,23 @@ extension TaskItemTests {
         #expect(DueStatus(due: CalendarDay(year: 2026, month: 10, day: 26), isDone: false, today: today) == .upcoming)
         #expect(DueStatus(due: CalendarDay(year: 2026, month: 10, day: 24), isDone: true, today: today) == .upcoming)
         #expect(DueStatus(due: nil, isDone: false, today: today) == nil)
+    }
+
+    @Test func aTagKeepsItsColorThroughRenames() {
+        let id = "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+        let before = TagItem(TagRecord(id: id, name: "work"))
+        let after = TagItem(TagRecord(id: id, name: "office"))
+
+        #expect(before.colorIndex(among: 8) == after.colorIndex(among: 8))
+    }
+
+    @Test func tagColorsStayInThePaletteAndSpreadOut() {
+        let indices = (0..<32).map { n in
+            TagItem(TagRecord(id: "00000000-0000-5000-8000-0000000000\(String(format: "%02d", n))", name: "t"))
+                .colorIndex(among: 8)
+        }
+
+        #expect(indices.allSatisfy { (0..<8).contains($0) })
+        #expect(Set(indices).count >= 6)
     }
 }

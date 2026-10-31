@@ -1,26 +1,18 @@
 import SwiftUI
 import TrackdoKit
 
-/// What a task carries beyond its title, in one dense line for its row:
-/// due date, subtask progress, schedule, tags and a note mark, most telling
-/// first since the line truncates. Words are kept few: priority shows only
-/// as the checkbox's color, and a due date is just the date, colored when
-/// it is today or past. The line is read as one sentence that does say all
-/// of it, priority included.
+/// What a task carries beyond its title, for its row: due date, subtask
+/// progress, schedule and a note mark, most telling first. Words are kept
+/// few: priority shows only as the checkbox's color, tags as chips, and a
+/// due date is just the date, colored when it is today or past. It is read
+/// as one sentence that does say all of it, priority and tags included.
 struct TaskSummary {
     let item: TaskItem
     let today: CalendarDay
 
-    /// One `Text` so the line truncates as a whole; `nil` when there is
-    /// nothing to show.
-    var text: Text? {
-        let parts = parts.compactMap(\.text)
-        guard let first = parts.first else {
-            return nil
-        }
-        return parts.dropFirst().reduce(first) { line, part in
-            Text("\(line)  \(part)")
-        }
+    /// Each part a symbol and a value, for the row to wrap between.
+    var texts: [Text] {
+        parts.compactMap(\.text)
     }
 
     var spoken: String {
@@ -81,7 +73,7 @@ struct TaskSummary {
             return nil
         }
         let names = item.tags.map(\.name).formatted(.list(type: .and, width: .narrow))
-        return part("tag", names, spoken: String(localized: "Tags: \(names)"))
+        return Part(text: nil, spoken: String(localized: "Tags: \(names)"))
     }
 
     private var note: Part? {

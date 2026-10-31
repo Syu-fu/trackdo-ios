@@ -76,6 +76,16 @@ public struct TagItem: Identifiable, Hashable, Sendable {
         id = record.id
         name = record.name
     }
+
+    /// Which of `count` colors this tag wears. Tags carry no color of their
+    /// own, so it comes from the id: the same on every device and kept
+    /// through renames. FNV-1a, since `hashValue` changes between launches.
+    public func colorIndex(among count: Int) -> Int {
+        let hash = id.utf8.reduce(UInt64(0xCBF2_9CE4_8422_2325)) { hash, byte in
+            (hash ^ UInt64(byte)) &* 0x0000_0100_0000_01B3
+        }
+        return Int(hash % UInt64(count))
+    }
 }
 
 /// A day without a time zone: a task due on the 31st stays due on the 31st
